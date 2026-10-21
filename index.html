@@ -603,7 +603,7 @@ function draw2(){
     const col = rankBy === 'miss' ? SEV[3] : '#6b7a99';
     $('#leg2').innerHTML = `<span><b>원 하나 = 정류장 하나</b></span><span>원 크기 = ${rankBy === 'miss' ? '하루 못 탄 사람' : '하루 탄 사람'}: ${smp.map(v => `<i style="display:inline-block;width:${Math.round(rad(v) * .8)}px;height:${Math.round(rad(v) * .8)}px;border-radius:50%;background:${col};opacity:.55;vertical-align:middle;margin:0 2px"></i>${fmt(v)}명`).join(' ')}</span><span>원 안 숫자 = 순위</span><span><i style="background:none;border:3px solid ${css('--ink')};border-radius:50%"></i>검은 테 = 반대 기준 상위 20에는 없는 곳</span><span><b>×</b> = 이 기준에서는 20위 밖</span>`;
     const tM = topM.filter(n => !topB.includes(n)), allCap = tM.every(n => R.some(r => r.n === n && r.v.startsWith('꽉')));
-    $('#lead2').innerHTML = `환승 대기 상위 300 정류장 중 노선별로 잰 버스 정류장 가운데 손볼 칸(꽉 참·간격 김)이 하나라도 있는 ${pool.length}곳을 <b>${rankBy === 'miss' ? '하루 못 탄 사람(못 탄 사람)' : '하루 탄 사람(승차)'}</b> 순으로 줄 세운 상위 20곳. 원이 클수록 그 수가 많고, 검은 테는 반대 기준 상위 20에는 들지 않는 곳이다. <b style="color:${SEV[3]}">탄 사람 순으로 고르면 20곳 중 ${changed}곳을 놓친다</b>${allCap ? ' — 놓치는 곳은 모두 꽉 차서 못 타는 노선이 있는 정류장' : ''}. 사당역4번출구B는 못 탄 사람 2위, 탄 사람 순으로는 20위 밖. 노선별 칸이 양호·측정 한계뿐인 정류장(고속터미널 등)은 뺐다.`;
+    $('#lead2').innerHTML = `환승 대기 상위 300 정류장 중 노선별로 잰 버스 정류장 가운데 손볼 칸(꽉 참·간격 김)이 하나라도 있는 ${pool.length}곳을 <b>${rankBy === 'miss' ? '하루 못 탄 사람(못 탄 사람)' : '하루 탄 사람(승차)'}</b> 순으로 줄 세운 상위 20곳. 원이 클수록 그 수가 많고, 검은 테는 반대 기준 상위 20에는 들지 않는 곳이다. <b style="color:${SEV[3]}">탄 사람 순으로 고르면 20곳 중 ${changed}곳을 놓친다</b>${allCap ? ' — 놓치는 곳은 모두 꽉 차서 못 타는 노선이 있는 정류장' : ''}. 사당역4번출구B는 못 탄 사람 2위, 탄 사람 순으로는 20위 밖. 노선별 칸이 양호·측정 한계뿐인 정류장(고속터미널 등)은 뺐다. ${rankBy === 'miss' ? `<span class="mute">이 순위는 '못 탄 사람이 가장 많은 정류장이 어디인가'에 답한다. 처방(증차·배차)은 ④에서 노선·시간대 칸 단위로 정하고, 이 지도는 어느 정류장부터 볼지 고르는 용도다.</span>` : `<span class="mute">탄 사람 순은 지금 행정이 쓰는 기준으로 같은 정류장을 줄 세운 것이다. 못 탄 사람 순과 비교하기 위한 보기이지 처방 기준이 아니다.</span>`}`;
     side2rank(cur, miss, other);
     return;
   }
@@ -624,7 +624,7 @@ function draw2(){
     m2.rescale(); side2band(top, rows.length);
     const smp = [.1, .4, 1].map(f => Math.round(mx * f / 100) * 100), rd2 = v => 4 + 22 * Math.sqrt(v / mx);
     $('#leg2').innerHTML = `<span><b>원 하나 = 정류장 하나</b></span><span>원 크기 = 하루 갈아탄 사람: ${smp.map(v => `<i style="display:inline-block;width:${Math.round(rd2(v) * .8)}px;height:${Math.round(rd2(v) * .8)}px;border-radius:50%;background:${css('--ink2')};opacity:.5;vertical-align:middle;margin:0 2px"></i>${fmt(v)}명`).join(' ')}</span>${gradLeg('원 색 = 내려서 다음 차 타기까지 평균', 5, 15, '분')}<span><i style="background:none;border:2.5px solid ${css('--ink')};border-radius:50%"></i>검은 테·번호 = 오래 걸리는 곳 1~10위(하루 100명 넘는 곳)</span>`;
-    $('#lead2').innerHTML = `환승 대기 상위 300 정류장의 <b>${BL[band2]}</b> 시간대. 원 하나가 정류장 하나이고, 원이 클수록 그 정류장에서 갈아탄 사람이 많다. 색이 붉을수록 내려서 다음 차를 타기까지 오래 걸린다(걷기+기다림, 노랑 5분 → 빨강 15분). 오래 걸리는 순서 1~10위에 번호를 달았다. 1위 <b>${top[0].n}</b>: 평균 ${fmt(top[0].m, 1)}분, 15분 넘는 사람 ${pct(top[0].p15)}.`;
+    $('#lead2').innerHTML = `환승 대기 상위 300 정류장의 <b>${BL[band2]}</b> 시간대. 원 하나가 정류장 하나이고, 원이 클수록 그 정류장에서 갈아탄 사람이 많다. 색이 붉을수록 내려서 다음 차를 타기까지 오래 걸린다(걷기+기다림, 노랑 5분 → 빨강 15분). 오래 걸리는 순서 1~10위에 번호를 달았다. 1위 <b>${top[0].n}</b>: 평균 ${fmt(top[0].m, 1)}분, 15분 넘는 사람 ${pct(top[0].p15)}. <span class="mute">이 지도는 '어디서 가장 오래 기다리나'에 답한다. 오래 기다리는 것(배차 간격·걷는 거리)과 못 타는 것(자리 없음)은 다른 문제라 1위도 다르고 처방도 다르다. 처방은 ④에서 칸 단위로 정한다.</span>`;
   }
 }
 function side2band(top, nAll){

@@ -32,7 +32,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-syst
 .wrap{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
 header h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.02em}
 header p{margin:0;color:var(--ink2)}
-.note{display:inline-block;margin-top:10px;padding:6px 10px;border-radius:8px;background:var(--surface2);color:var(--ink2);font-size:12.5px}
+.note{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:8px;background:var(--surface2);color:var(--ink2);font-size:12px}
 .tabs{display:flex;gap:6px;margin:18px 0 14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
 .tab{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink2);padding:8px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:14px;white-space:nowrap}
 .tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -61,7 +61,7 @@ select,input[type=search]{font:inherit;font-size:14px;padding:7px 9px;border-rad
 .verdict{display:inline-block;padding:3px 9px;border-radius:7px;font-size:13px;font-weight:700}
 .v-cap{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}
 .v-hw{background:color-mix(in srgb,var(--blue) 18%,transparent);color:var(--blue)}
-.guide{display:grid;grid-template-columns:88px 1fr;gap:3px 10px;font-size:13.5px;line-height:1.45;margin:6px 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)} .guide .gk{font-weight:800;color:var(--ink2)} .guide .gv b{color:var(--red)}
+.guide,.exp{display:none} body.sg .exp{display:block} body.sg .guide{display:grid;grid-template-columns:88px 1fr;gap:3px 10px;font-size:13.5px;line-height:1.45;margin:6px 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)} .guide .gk{font-weight:800;color:var(--ink2)} .guide .gv b{color:var(--red)}
 .v-snd{background:color-mix(in srgb,var(--mute) 25%,transparent);color:var(--ink)}
 .v-ok{background:var(--surface2);color:var(--ink2)}
 svg{display:block;width:100%;height:auto;touch-action:none}
@@ -102,8 +102,8 @@ input[type=range]{width:100%;accent-color:var(--red)}
 <header>
   <div class="mute small">2026 데이터안심구역 활용 경진대회 · 데모</div>
   <h1>잔류승객지수 기반 수도권 통근버스 운행 최적화 솔루션</h1>
-  <p><b>잔류 승객</b>은 정류장에 서 있는 동안 자기 노선 버스가 왔지만 타지 못하고 다음 차를 기다린 사람이다. <b>잔류승객지수(LPI)</b>는 갈아타는 사람 가운데 잔류 승객의 비율을 정류장×시간대×노선 칸마다 잰 값이다.<br>교통카드의 '앞 차에서 내린 태그 → 다음 차에 탄 태그' 사이에 그 노선 버스가 몇 대 떠났는지로 세며, 버스는 카드에 적힌 차량 번호로 한 대씩 복원한다.</p>
-  <span class="note">모든 숫자는 데이터안심구역 반출 승인 집계(정류장×시간대×노선 칸의 평균·합계)입니다. 화면 속 사람·버스는 <b>집계로 재구성한 평균 승객 여정</b>이며 실제 개인 기록이 아닙니다.</span>
+  <p class="small"><b>잔류 승객</b> = 정류장에서 자기 노선 버스가 왔지만 타지 못하고 다음 차를 기다린 사람 · <b>잔류승객지수(LPI)</b> = 갈아타는 사람 중 잔류 승객 비율(정류장×시간대×노선 칸) · 버스는 카드의 차량 번호로 한 대씩 복원</p>
+  <span class="note">반출 승인 집계만 사용 · 화면 속 사람·버스는 집계로 재구성한 평균 승객 여정(개인 기록 아님) · <button class="chip" id="sgBtn" style="padding:1px 9px;font-size:12px">ⓘ 화면 설명 보기</button></span>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -122,7 +122,7 @@ input[type=range]{width:100%;accent-color:var(--red)}
     <div class="card">
       <svg id="stage" viewBox="0 0 900 380" aria-label="정류장 장면"></svg>
       <div id="timeline" style="margin-top:6px"></div>
-      <div class="small mute" id="stageCap" style="margin-top:4px"></div>
+      <div class="small mute exp" id="stageCap" style="margin-top:4px"></div>
       <div id="dayBand" style="margin-top:10px"></div>
       <h3 style="margin-top:14px">이 정류장에서 이 버스를 기다린 100명</h3>
       <div class="waffle" id="waffle"></div>
@@ -195,7 +195,7 @@ input[type=range]{width:100%;accent-color:var(--red)}
     <div class="gk">보는 것</div><div class="gv"><b>어르신(경로 카드)이 내린 뒤 다음 버스를 타기까지 걸리는 시간</b>을 같은 정류장의 다른 승객이 걸리는 시간과 비교한다.</div>
     <div class="gk">기준·단위</div><div class="gv">정류장×시간대 단위이며, 2026년 여름 4일 표본을 사용한다. 시간은 앞 차에서 내린 태그부터 다음 차에 탄 태그까지의 시간으로, 걷기와 기다림을 합한 값이다. 두 시간을 따로 측정할 수는 없다.<br>평균 시간이 환승 인정 시간(낮 30분)을 넘는 20개 칸은 중간에 무료 지하철 탑승이 포함되었을 가능성이 있어 제외한다.</div>
     <div class="gk">표시</div><div class="gv">장면은 정류장 이름이 지하철역이면 지하철 출입구에서, 아니면 타고 온 버스에서 내리는 것으로 그린다. 어르신은 지하철이 무임이라 앞 태그가 남지 않아 기록만으로는 구분할 수 없다.<br>어르신은 천천히 걷고 눈앞의 버스를 뛰어가 잡지 못한다. 걷기와 기다림의 비율은 설명용이다.<br>지도에서 원 크기는 어르신 하루 환승 인원, 색은 어르신 평균 시간이다. 표에는 어르신 평균, 그 외 평균, 15분 넘는 비율을 표시한다.</div>
-    <div class="gk">예</div><div class="gv">미금역3번출구(마을) 낮 시간대에는 어르신이 평균 28.9분, 같은 정류장의 다른 승객은 9.0분이 걸린다.<br>15분 넘게 걸리는 비율은 어르신 65%, 다른 승객 14%이다.</div>
+    <div class="gk">예</div><div class="gv" id="eldEx"></div>
     <div class="gk">처방과 연결</div><div class="gv">시간대 평균은 2배, 15분 넘는 비율은 3배이다. 장보기 통행이 섞일 수 있어 처방은 그늘막·의자·마을버스 배차로 한정한다.</div>
   </div></div>
   <div class="grid">
@@ -265,6 +265,7 @@ const sev = (v, lo, hi) => { let t = Math.max(0, Math.min(1, (v - lo) / (hi - lo
   return '#' + a.map((x, k) => Math.round(x + (b[k] - x) * f).toString(16).padStart(2, '0')).join(''); };
 const sevT = (v, lo, hi) => Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
 const gradLeg = (lab, lo, hi, unit) => `<span style="display:inline-flex;align-items:center;gap:6px">${lab} <span class="mute">${lo}${unit}</span><span style="display:inline-block;width:120px;height:10px;border-radius:5px;background:linear-gradient(90deg,${SEV.join(',')})"></span><span style="color:${SEV[4]};font-weight:700">${hi}${unit}+</span></span>`;
+document.getElementById('sgBtn').onclick = () => { document.body.classList.toggle('sg'); document.getElementById('sgBtn').textContent = document.body.classList.contains('sg') ? 'ⓘ 화면 설명 닫기' : 'ⓘ 화면 설명 보기'; };
 const guide = rows => `<div class="guide">${rows.filter(r => r && r[1]).map(([k, v]) => `<div class="gk">${k}</div><div class="gv">${v}</div>`).join('')}</div>`;
 const vcls = v => v.startsWith('꽉') ? 'v-cap' : v.startsWith('간격') ? 'v-hw' : v.startsWith('측정') ? 'v-snd' : 'v-ok';
 
@@ -891,8 +892,9 @@ const b4 = r => r.t * r.m;   // 간격이 긴 칸 순서: 하루 사람 × 평�
 
 // ---------- ⑤ 어르신 ----------
 let m5, eldRow = null, eldAnim = null;
-const ELDOK = r => r.m <= 30;   // 낮 환승 인정 30분을 넘는 칸 = 사이에 무임 지하철 탑승이 끼었을 수 있음(센터 확인 전) → 뺌
-const ELD = D.eld.filter(r => r.t >= 80 && ELDOK(r)).sort((a, b) => (b.m - b.o) - (a.m - a.o));
+const ELDOK = r => r.m <= 25;   // 평균 25분 넘는 칸 = 환승 인정 30분에 가까워 사이에 다른 통행(무임 지하철·장보기)이 끼었을 가능성 → 측정 불가로 뺌
+const ELD = D.eld.filter(r => r.t >= 80 && ELDOK(r)).sort((a, b) => b.t - a.t);
+const ELD0 = ELD.filter(r => r.m >= 13 && r.m <= 22 && r.m - r.o >= 5)[0] || ELD[0];   // 기본 예시 = 시간대 평균(14~16분) 근처이면서 다른 승객과 차이가 뚜렷한 곳 중 어르신이 가장 많은 정류장
 function INIT_eld(){
   m5 = makeMap($('#map5'), $('#tip5'));
   const L = m5.layer, rows = D.eld.filter(r => r.t >= 30 && ELDOK(r)), mx = Math.max(...rows.map(r => r.t));
@@ -903,14 +905,15 @@ function INIT_eld(){
   }
   m5.focus(127.02, 37.45, W / 2.2); m5.rescale();
   $('#leg5').innerHTML = `${gradLeg('어르신 평균 대기', 10, 25, '분')}<span>원 크기 = 어르신 하루 환승</span>`;
-  $('#eldList').innerHTML = `<table class="t"><tr><th>정류장 (어르신 하루 80명+)</th><th class="num">어르신</th><th class="num">그 외</th><th class="num">15분+</th></tr>${ELD.slice(0, 8).map((r, i) => `<tr class="click" data-i="${i}"><td>${short(r.n, 14)} <span class="mute">${r.b}</span></td><td class="num" style="color:var(--red);font-weight:700">${fmt(r.m, 1)}분</td><td class="num">${fmt(r.o, 1)}분</td><td class="num">${pct(r.p15)}</td></tr>`).join('')}</table>`;
+  $('#eldList').innerHTML = `<table class="t"><tr><th>정류장 (어르신 하루 80명+, 많은 순)</th><th class="num">어르신</th><th class="num">그 외</th><th class="num">15분+</th></tr>${ELD.slice(0, 8).map((r, i) => `<tr class="click" data-i="${i}"><td>${short(r.n, 14)} <span class="mute">${r.b}</span></td><td class="num" style="color:var(--red);font-weight:700">${fmt(r.m, 1)}분</td><td class="num">${fmt(r.o, 1)}분</td><td class="num">${pct(r.p15)}</td></tr>`).join('')}</table>`;
   $('#eldList').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => eldPick(ELD[+tr.dataset.i]));
   const B = ['출근', '낮', '퇴근', '밤'];
   const g = (gg, b) => D.eldb.find(x => x.g === gg && x.b === b) || {};
   $('#eldBands').innerHTML = `<table class="t"><tr><th>시간대</th><th class="num">어르신 평균</th><th class="num">그 외</th><th class="num">어르신 15분+</th><th class="num">그 외 15분+</th></tr>${B.map(b => `<tr><td>${b}</td><td class="num" style="color:var(--red);font-weight:700">${fmt(g('어르신', b).m, 1)}분</td><td class="num">${fmt(g('그외', b).m, 1)}분</td><td class="num">${pct(g('어르신', b).p15)}</td><td class="num">${pct(g('그외', b).p15)}</td></tr>`).join('')}</table>
-    <div class="small mute" style="margin-top:6px">경로 카드 기준. 시간 = 앞 버스 내린 태그 → 다음 버스 탄 태그(걸어가는 시간 + 기다린 시간, 둘을 나눠 재지는 못함). 장면의 걷기·기다림 비율은 설명용. 평균이 환승 인정 시간(낮 30분)을 넘는 정류장 20칸은 사이에 무료 지하철 탑승이 끼었을 수 있어 지도·표에서 뺐다(센터에서 확인 중). 같은 정류장에서도 1.3~3배 길어 걷는 속도만으로는 설명되지 않는다. 단, 상위의 시장 정류장은 장을 보고 30분 안에 다시 탄 경우가 섞였을 수 있다(시장 정류장 끊긴 환승 비율 .17~.23) — 그래서 처방은 증차가 아니라 그늘막·의자·마을버스 배차.</div>`;
+    <div class="small mute" style="margin-top:6px">경로 카드 기준. 시간 = 앞 버스 내린 태그 → 다음 버스 탄 태그(걸어가는 시간 + 기다린 시간, 둘을 나눠 재지는 못함). 장면의 걷기·기다림 비율은 설명용. 평균이 25분을 넘는 정류장은 환승 인정 시간(30분)에 가까워 사이에 다른 통행(무임 지하철·장보기)이 끼었을 가능성이 커 '측정 불가'로 보고 지도·표에서 뺐다. 같은 정류장에서도 1.3~3배 길어 걷는 속도만으로는 설명되지 않는다. 단, 상위의 시장 정류장은 장을 보고 30분 안에 다시 탄 경우가 섞였을 수 있다(시장 정류장 끊긴 환승 비율 .17~.23) — 그래서 처방은 증차가 아니라 그늘막·의자·마을버스 배차.</div>`;
   $('#eldPlay').onclick = () => eldPlay();
-  eldPick(ELD.find(r => r.n.startsWith('미금역3번출구') && r.b === '낮') || ELD[0]);
+  $('#eldEx').textContent = `${ELD0.n} ${ELD0.b} 시간대에는 어르신이 평균 ${fmt(ELD0.m, 1)}분, 같은 정류장의 다른 승객은 ${fmt(ELD0.o, 1)}분이 걸린다. 15분 넘게 걸리는 비율은 어르신 ${pct(ELD0.p15)}, 다른 승객 ${pct(ELD0.op15)}이다.`;
+  eldPick(ELD0);
 }
 function eldPick(r){ eldRow = r; m5.focus(r.x, r.y, W / 2.5); eldPlay(); }
 function eldPlay(){

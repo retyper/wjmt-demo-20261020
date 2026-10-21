@@ -910,7 +910,7 @@ function INIT_eld(){
   const B = ['출근', '낮', '퇴근', '밤'];
   const g = (gg, b) => D.eldb.find(x => x.g === gg && x.b === b) || {};
   $('#eldBands').innerHTML = `<table class="t"><tr><th>시간대</th><th class="num">어르신 평균</th><th class="num">그 외</th><th class="num">어르신 15분+</th><th class="num">그 외 15분+</th></tr>${B.map(b => `<tr><td>${b}</td><td class="num" style="color:var(--red);font-weight:700">${fmt(g('어르신', b).m, 1)}분</td><td class="num">${fmt(g('그외', b).m, 1)}분</td><td class="num">${pct(g('어르신', b).p15)}</td><td class="num">${pct(g('그외', b).p15)}</td></tr>`).join('')}</table>
-    <div class="small mute" style="margin-top:6px">경로 카드 기준. 시간 = 앞 버스 내린 태그 → 다음 버스 탄 태그(걸어가는 시간 + 기다린 시간, 둘을 나눠 재지는 못함). 장면의 걷기·기다림 비율은 설명용. 평균이 25분을 넘는 정류장은 환승 인정 시간(30분)에 가까워 사이에 다른 통행(무임 지하철·장보기)이 끼었을 가능성이 커 '측정 불가'로 보고 지도·표에서 뺐다. 같은 정류장에서도 1.3~3배 길어 걷는 속도만으로는 설명되지 않는다. 단, 상위의 시장 정류장은 장을 보고 30분 안에 다시 탄 경우가 섞였을 수 있다(시장 정류장 끊긴 환승 비율 .17~.23) — 그래서 개선안은 증차가 아니라 그늘막·의자·마을버스 배차.</div>`;
+    <div class="small mute" style="margin-top:6px">경로 카드 기준. 시간은 앞 차에서 내린 태그부터 다음 버스에 탄 태그까지이며, 걸어간 시간과 기다린 시간을 따로 재지는 못한다(장면의 걷기·기다림 비율은 설명용). 어르신은 지하철이 무임이라 지하철 탄 기록이 남지 않아, 버스에서 내려 지하철을 타고 다시 버스를 탄 사람도 '버스를 기다린 사람'처럼 보인다. 시장에 들렀다가 다시 탄 경우도 섞일 수 있다. 그래서 '2배'는 실제보다 클 수 있는 값이고, 평균이 25분을 넘는 정류장은 이 영향이 커서 지도·표에서 뺐다. 그런데도 같은 정류장에서 어르신이 1.3~3배 오래 걸리는 것은 걷는 속도만으로는 설명되지 않는다.</div>`;
   $('#eldPlay').onclick = () => eldPlay();
   $('#eldEx').textContent = `${ELD0.n} ${ELD0.b} 시간대에는 어르신이 평균 ${fmt(ELD0.m, 1)}분, 같은 정류장의 다른 승객은 ${fmt(ELD0.o, 1)}분이 걸린다. 15분 넘게 걸리는 비율은 어르신 ${pct(ELD0.p15)}, 다른 승객 ${pct(ELD0.op15)}이다.`;
   eldPick(ELD0);

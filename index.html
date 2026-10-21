@@ -386,6 +386,7 @@ function renderScene(x){
     ['표시', '사람 1명은 실제 승객 1명을 나타낸다. 색이 짙은 사람은 버스를 1대 놓친 경우이며, 숫자는 놓친 대수이다.<br>왼쪽의 큰 숫자는 지금 서 있는 사람, 이번 차에 탄 사람, 못 타고 남은 사람이다.<br>타임라인 막대는 30분마다 못 탄 사람 수이며, 가장 진한 막대가 하루 최고 칸이다.'],
     ['오른쪽 숫자', '오른쪽에는 하루 갈아탄 사람 수 · 못 탄 비율(자기 노선 버스가 1대 이상 지나갔는데 타지 못한 비율) · 내려서 다음 차를 탈 때까지 걸린 평균 시간(걷기+기다림) · 버스 간격 · 놓친 버스가 출발할 때 탄 인원 · 그중 40명 넘게 탄 버스의 비율을 표시한다.'],
     ['예', ex1],
+    ['지수 범위', '이 지수는 <b>버스가 서서 일부만 태우고 떠난</b> 경우를 센다(승차 태그가 있는 차만 복원). 꽉 차서 <b>서지 않고 지나간</b> 버스(만차 무정차)는 태그가 없어 잡히지 않으며 별도 추정(출근 광역 48노선 하루 196회·716명, 6/9)으로만 있다. 타임라인 옆 단추로 두 장면을 비교할 수 있다'],
     ['판정', `<span class="verdict ${vcls(x.v)}">${x.v.split('(')[0].trim()}</span> — 꽉 참 = 못 탄 비율이 20% 이상이고 놓친 버스의 절반 이상이 40명 넘게 탐 → 증차 / 간격 김 = 못 탄 비율이 20% 미만인데 평균 10분 넘게 기다림 → 배차 / 측정 한계 = 못 탄 비율이 20% 이상인데 버스는 덜 참(걷는 시간 4분 가정이 맞지 않는 곳으로, 처방에서 제외) / 양호`],
   ]);
   $('#kpis').innerHTML = `
@@ -445,7 +446,7 @@ function fitQueue(p1, p2, per){
   return best ? {C: Math.round(per * 1.04), caps: best.caps, pf: best.pf, r: {m1: best.m1, m2: best.m2}} : {C: per, caps: [per], pf: 0, r: {m1: 0, m2: 0}};
 }
 //   기록판: 운영 기록(승차)은 정원에서 멈추고, 남겨진 사람은 어느 시스템에도 0 — 교통카드로 이어야 처음 보인다.
-let sceneRow = null, sceneStart = null, scenePaused = false;
+let sceneRow = null, sceneStart = null, scenePaused = false, nostopMode = false;
 const MISS = ['--ink2', '#FDA33A', '#FF2D2D'];
 function playScene(x, startMin){
   if (x) { sceneRow = x; if (startMin == null) sceneStart = null; } x = sceneRow; if (!x) return;
@@ -511,7 +512,7 @@ function playScene(x, startMin){
   const FQ = fitQueue(p1, p2, per), CAP = cur ? cur.fq.C : FQ.C;
   const perNow = () => cur ? cur.per : per, hwNow = () => cur ? cur.hw : hw;
   const arrOf = () => perNow();                                        // 배차마다 고르게 옴(칸마다 다름)
-  const capOf = k => (cur ? cur.fq.caps : FQ.caps)[k % (cur ? cur.fq.caps : FQ.caps).length];   // 이 차가 이 정류장에서 태울 수 있는 빈자리(차마다 다름)
+  const capOf = k => nostopMode ? 0 : (cur ? cur.fq.caps : FQ.caps)[k % (cur ? cur.fq.caps : FQ.caps).length];   // 무정차 보기: 빈자리 0   // 이 차가 이 정류장에서 태울 수 있는 빈자리(차마다 다름)
   for (let i = 0; i < Math.round(per * .5); i++) P.push(mk(0));
   let spawned = 0, boarded = 0, left1 = 0, left2 = 0, cyc = -1, lastLeft = 0, lastN = 0, lastCap = 0, decided = -1, departed = -1;
   let cols = 36;
@@ -522,7 +523,7 @@ function playScene(x, startMin){
   const TL = $('#timeline');
   if (cells.length) {
     const mx = Math.max(...cells.map(c => c.mn)), bw = 900 / 32 - 2, xo = m => (m - 360) / 960 * 900;
-    TL.innerHTML = `<div class="small" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="tlCap"></span><button class="chip" id="tlPlay" style="padding:2px 10px">⏸ 멈춤</button></div>
+    TL.innerHTML = `<div class="small" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="tlCap"></span><span style="display:inline-flex;gap:6px"><button class="chip ${nostopMode ? 'on' : ''}" id="nsBtn" style="padding:2px 10px">${nostopMode ? '정차 후 일부 탑승(지수 범위)' : '만차 무정차 보기(지수 밖)'}</button><button class="chip" id="tlPlay" style="padding:2px 10px">⏸ 멈춤</button></span></div>
       <svg viewBox="0 0 900 78" style="width:100%;display:block;cursor:pointer" id="tlSvg">
       ${cells.map(c => { const h = 6 + 46 * c.mn / mx; const col = c === peak ? c2 : (c.min >= bandRange[0] && c.min < bandRange[1] ? c1 : css('--line')); return `<rect data-min="${c.min}" x="${xo(c.min) + 1}" y="${62 - h}" width="${bw}" height="${h}" rx="2" fill="${col}"><title>${String(c.hh).padStart(4, '0')} 갈아탄 ${fmt(c.t)} · 못 탄 ${fmt(c.mn)} · 버스 ${fmt(c.bus, 1)}대</title></rect>`; }).join('')}
       ${[6, 9, 12, 15, 18, 21].map(h => `<text x="${xo(h * 60)}" y="75" font-size="9" fill="${mute}">${h}:00</text>`).join('')}
@@ -531,6 +532,7 @@ function playScene(x, startMin){
       <div class="small mute">막대 = 30분 동안 못 탄 사람(수도권 전역판 3일 평균) · 진한 색 = ${BL[x.b]} 시간대 · 가장 진한 막대 = 하루 최고 · 막대를 누르면 그 시각부터 재생</div>`;
     $('#tlSvg').addEventListener('click', e => { const r = e.target.closest('rect[data-min]'); let m; if (r) m = +r.dataset.min; else { const bb = e.currentTarget.getBoundingClientRect(); m = Math.floor((360 + (e.clientX - bb.left) / bb.width * 960) / 30) * 30; } playScene(null, m); });
     $('#tlPlay').onclick = () => { scenePaused = !scenePaused; $('#tlPlay').textContent = scenePaused ? '▶ 재생' : '⏸ 멈춤'; };
+    $('#nsBtn').onclick = () => { nostopMode = !nostopMode; playScene(null, sceneStart); };
   } else TL.innerHTML = '<div class="small mute">이 칸은 30분 단위 집계(수도권 전역판)에 없어 시간대 평균으로만 재생한다.</div>';
   $('#stageCap').innerHTML = `사람 1명 = 실제 1명. 줄 선 순서대로 타고, 버스마다 이 정류장에서 태울 수 있는 빈자리가 다르다(앞 정류장에서 이미 태우고 온 만큼 적음, 평균 약 ${CAP}명, 꽉 차서 오는 차 ${pct(FQ.pf)}). 빈자리 분포는 카드 실측 '못 탄 사람 비율'(${pct(p1)})에 맞춰 골랐고, 장면의 비율은 ${pct(FQ.r.m1)}이다. 사람은 배차마다 고르게 온다고 두었다(지하철 열차 몰림은 뺌).`;
   function frame(now){
@@ -545,7 +547,7 @@ function playScene(x, startMin){
     const ak = arrOf(k), burst = false;
     const target = P.__base + Math.floor(ak * Math.min(1, u / CYC)); while (spawned < target) { P.push(mk(0)); spawned++; }
     let bx;
-    if (u < ARR) bx = 900 - 830 * (u / ARR); else if (u < ARR + DW) bx = 70; else if (u < ARR + DW + DEP) bx = 70 - 520 * ((u - ARR - DW) / DEP); else bx = 1200;
+    if (nostopMode) bx = 900 - 1350 * (u / (ARR + DW + DEP)); else if (u < ARR) bx = 900 - 830 * (u / ARR); else if (u < ARR + DW) bx = 70; else if (u < ARR + DW + DEP) bx = 70 - 520 * ((u - ARR - DW) / DEP); else bx = 1200;
     bus.setAttribute('transform', `translate(${bx},282) scale(.72)`);
     if (u >= ARR && decided !== k) {                                       // 정차: 차례가 된 사람부터 정원까지
       decided = k; let n = 0, stay = 0; const cap = capOf(k);
@@ -556,9 +558,9 @@ function playScene(x, startMin){
       departed = k; for (const p of P) if (!p.out && p.seen === k) { p.miss++; if (p.miss === 1) left1++; if (p.miss === 2) left2++; }
     }
     const boarding = u >= ARR && u < ARR + DW;
-    const fillN = boarding ? Math.min(1, (u - ARR) / (DW * .8)) : u >= ARR + DW ? 1 : 0;
+    const fillN = nostopMode ? 1 : boarding ? Math.min(1, (u - ARR) / (DW * .8)) : u >= ARR + DW ? 1 : 0;
     seats.forEach((r, i) => { const f = i / seats.length < fillN ? sFill : sEmpty; if (r.__f !== f) { r.__f = f; r.setAttribute('fill', f); } });
-    full.textContent = (boarding || u < ARR + DW + DEP) && u >= ARR + 300 ? (lastLeft ? `빈자리 ${lastCap}: ${lastN}명 타고 꽉 참, ${lastLeft}명 남김` : `${lastN}명 탐, 남은 사람 없음`) : (u >= ARR && u < ARR + 300 ? `빈자리 ${lastCap}` : '');
+    full.textContent = nostopMode ? (u < ARR + DW + DEP ? '만차 — 서지 않고 지나간다' : '') : (boarding || u < ARR + DW + DEP) && u >= ARR + 300 ? (lastLeft ? `빈자리 ${lastCap}: ${lastN}명 타고 꽉 참, ${lastLeft}명 남김` : `${lastN}명 탐, 남은 사람 없음`) : (u >= ARR && u < ARR + 300 ? `빈자리 ${lastCap}` : '');
     bigW.textContent = `${waiting0}명`; bigN.textContent = u >= ARR && u < ARR + DW + DEP ? `${lastN}명` : '–'; bigL.textContent = u >= ARR && u < ARR + DW + DEP ? `${lastLeft}명` : '–';
     const waiting = P.filter(p => !p.out).length; waiting0 = waiting;
     if (waiting > MAXW) { playScene(); return; }
@@ -584,7 +586,7 @@ function playScene(x, startMin){
       const cc = cur ? cur.c : null; $('#tlCap').innerHTML = cc ? `지금 <b>${String(cc.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} 칸</b>: 갈아탄 ${fmt(cc.t)}명 · 버스를 놓친 ${fmt(cc.mn)}명(${pct(cc.mn / cc.t)}) · 버스 ${fmt(cc.bus, 1)}대(간격 ${fmt(30 / cc.bus, 1)}분) — 30분 칸, 수도권 전역판 3일 평균` : '이 시각은 집계 칸이 없다(하루 10명 미만)'; }
     v1.textContent = x.bd ? `하루 ${fmt(x.bd)}명` : '–'; n1.textContent = ''; n2.textContent = `이 정류장 승차 합계`;
     v2.textContent = `하루 ${fmt(x.mn)}명`; v3.textContent = x.mn >= 1 ? `놓친 버스는 평균 ${fmt(x.ld2)}명 태우고 떠남 · 교통카드로 처음 셈` : '교통카드로 처음 셈';
-    msg.textContent = u < ARR ? '버스가 들어온다(앱 안내대로 도착).'
+    msg.textContent = nostopMode ? '만차 무정차: 버스가 서지 않고 지나간다. 승차 태그가 없어 잔류승객지수에는 잡히지 않는다(별도 추정: 출근 광역 48노선 하루 196회·716명, 6/9)' : u < ARR ? '버스가 들어온다(앱 안내대로 도착).'
       : boarding ? (lastLeft ? `앞에서부터 ${lastN}명이 타고 꽉 찼다. 뒤쪽 ${lastLeft}명은 남고, 승차 기록에는 ${lastN}명만 남는다.` : `밀린 줄까지 ${lastN}명이 다 탔다.`)
       : u < ARR + DW + DEP ? '버스가 떠나고, 남은 사람은 승차 기록에 없다.'
       : `다음 차까지 ${fmt(hw, 1)}분. 색은 버스를 1대 놓친 사람, 숫자는 놓친 대수이다`;

@@ -404,7 +404,7 @@ function renderScene(x){
     <div class="lab">교통카드가 잰 실제 평균 대기</div><div class="bar" style="background:var(--ink);color:var(--bg)" id="actBar">${fmt(x.m, 1)}분</div>
     ${x.m1 >= .05 ? `<div class="lab">눈앞에서 한 대를 못 탄 사람 (+ 배차 한 번)</div><div class="bar" style="background:var(--red);width:${wid(app + x.hw)}">≈ ${fmt(app + x.hw, 1)}분 — ${pct(x.m1)}</div>` : ''}`;
   if (app != null) $('#actBar').style.width = wid(x.m);
-  const rx = x.v.startsWith('꽉') ? `버스가 ${fmt(x.hw, 1)}분마다 오는데도 꽉 차서 못 타는 칸이다. 검토 순서는 <b>① 이 칸에 몰린 운행을 고르게·출퇴근 집중배차 → ② 남으면 증차</b>. 걸린 손실 하루 약 ${fmt(x.mn * x.hw)} 인·분(${fmt(x.mn)}명 × 버스 간격 ${fmt(x.hw, 1)}분).`
+  const rx = x.v.startsWith('꽉') ? `버스가 ${fmt(x.hw, 1)}분마다 오는데도 꽉 차서 못 타는 칸이다. 검토 순서는 <b>① LPI가 높은 30분 칸에 운행 집중(집중배차·중간배차) → ② 남으면 증차</b>. 걸린 손실 하루 약 ${fmt(x.mn * x.hw)} 인·분(${fmt(x.mn)}명 × 버스 간격 ${fmt(x.hw, 1)}분).`
     : x.v.startsWith('측정') ? `못 탄 사람은 10명 중 2명 이상인데 놓친 버스는 덜 찬 칸. 걷는 시간을 4분으로 고정해 세었기 때문에, 지하철 출구에서 승강장까지 4분 넘게 걸리는 곳은 걷는 동안 지나간 버스까지 '놓친 버스'로 세어진다(안양역 2번: 버스가 4분마다 오고 떠날 때 13~18명뿐인데 10명 중 3~4명이 못 탐). 2층버스(정원 70명대)도 40명 기준이 맞지 않는다. 지수가 과대인 칸이므로 개선안·순위에서 뺐고, 정류장별 걷는 시간을 재서 다시 셀 때까지 '측정 한계'로 둔다`
     : x.v.startsWith('간격') ? `못 탄 사람은 10명 중 ${fmt(x.m1 * 10, 0)}명인데 내려서 다음 차를 타기까지 평균 ${fmt(x.m, 1)}분이 걸리는 칸이다. 꽉 차서가 아니라 버스 간격이 길어서이므로 배차 간격을 줄이는 개선안.` : '못 탄 사람 비율도 낮고 평균 대기도 10분 미만인 칸이다. 지금은 손볼 우선순위가 낮다.';
   $('#verdict').innerHTML = `<span class="verdict ${vcls(x.v)}">${x.v}</span> <span class="small">${rx}</span>

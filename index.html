@@ -695,7 +695,8 @@ function flow(k){
     const [x, y] = g.path[0], [a, b] = P(x, y);
     const n = el('circle', {cx: a, cy: b, r: 9, 'data-r': 9, fill: sev(g.w || 0, 3, 9), stroke: css('--surface'), 'stroke-width': 2, 'data-sw': 2}, L);
     bindDot(m3, n, `<b>${g.a}</b><br>${J.legs[i - 1].z}에서 내려 걸어와 ${g.r}${g.mode === 'rail' ? '' : '번'}으로 갈아탐${g.w != null ? `<br>내려서 타기까지 평균 ${fmt(g.w, 1)}분` : ''}`, () => flowSide(k, g.a));
-    flowLabel(L, x, y, `갈아타기 ${i}${g.w != null ? ` · ${fmt(g.w, 1)}분` : ''}`, sev(g.w || 0, 3, 9), 13, 22);
+    const q3 = g.mode === 'bus' ? R.find(q => q.n === g.a && q.b === J.band && q.r.startsWith(g.r)) : null;
+    flowLabel(L, x, y, `갈아타기 ${i}${g.w != null ? ` · 평균 ${fmt(g.w, 1)}분` : ''}${q3 ? ` · 15분+ ${pct(q3.p15)}` : ''}`, sev(g.w || 0, 3, 9), 13, 22);
   });
   const [sa, sb2] = P(...s0);
   el('circle', {cx: sa, cy: sb2, r: 10, 'data-r': 10, fill: css('--ink'), stroke: css('--surface'), 'stroke-width': 3, 'data-sw': 3}, L);
@@ -713,12 +714,14 @@ function flow(k){
 }
 function flowSide(k, focusStop){
   const J = D.journey[k], c = D.cand[k], band = J.band;
-  const say = J.legs.map((g, i) => i === 0 ? `<b>${g.a}</b>에서 ${g.mode === 'rail' ? g.r : g.r + '번 버스'}를 타고 ${g.z}에서 내린다` : `걸어서 <b>${g.a}</b>${g.mode === 'rail' ? '역' : ' 정류장'}으로 가 ${g.mode === 'rail' ? g.r : g.r + '번 버스'}로 갈아탄다${g.w != null ? ` — 이 환승점에서 ${g.mode === 'rail' ? g.r : g.r + '번'}으로 갈아탄 사람들은 내려서 다음 차에 타기까지 <b style="color:var(--red)">평균 ${fmt(g.w, 1)}분</b>(걷기+기다림, 가장 긴 곳이 아니라 이 환승점의 평균)` : ''} → ${i === J.legs.length - 1 ? `<b>${g.z}</b>에 도착` : g.z + '에서 내린다'}`).join(' → ');
-  $('#flowLead').innerHTML = `<b>${J.title}</b> (${band}) 대표 여정: ${say}. <span class="mute">가장 오래 기다리는 정류장은 ② 대기 지도(정류장 평균 16분대)와 ⑤ 어르신 탭에서 볼 수 있다.</span>`;
+  const xq = g => g.mode === 'bus' ? R.find(q => q.n === g.a && q.b === band && q.r.startsWith(g.r)) : null;   // 환승점×시간대×노선 칸(15분+ 비중, 버스를 보낸 비중)
+  const say = J.legs.map((g, i) => i === 0 ? `<b>${g.a}</b>에서 ${g.mode === 'rail' ? g.r : g.r + '번 버스'}를 타고 ${g.z}에서 내린다` : `걸어서 <b>${g.a}</b>${g.mode === 'rail' ? '역' : ' 정류장'}으로 가 ${g.mode === 'rail' ? g.r : g.r + '번 버스'}로 갈아탄다 → ${i === J.legs.length - 1 ? `<b>${g.z}</b>에 도착` : g.z + '에서 내린다'}`).join(' → ');
+  const xs = J.legs.slice(1).filter(g => g.w != null).map(g => { const q = xq(g); return `${g.a}에서 ${g.mode === 'rail' ? g.r : g.r + '번'}으로 갈아타는 사람은 내려서 다음 차를 타기까지 평균 ${fmt(g.w, 1)}분${q ? `이고, 10명 중 ${fmt(q.p15 * 10, 0)}명은 15분 넘게 걸리며 10명 중 ${fmt(q.m1 * 10, 0)}명은 버스 한 대를 그냥 보낸다` : ''}`; }).join('. ');
+  $('#flowLead').innerHTML = `<b>${J.title}</b> (${band}) 대표 여정: ${say}. ${c.t ? `<b>이 구간은 하루 ${fmt(c.t)}통행이 갈아타는 데만 한 번에 평균 ${fmt(c.w, 1)}분(${fmt(c.tr, 1)}번 갈아탐)을 쓰고, 하루로 합치면 ${fmt(c.loss, 0)}시간이다.</b> ` : ''}${xs ? `<span class="mute">${xs}. 평균 몇 분은 환승점 하나의 값이고, 가장 오래 기다리는 정류장은 ② 대기 지도와 ⑤ 어르신 탭에 있다.</span>` : ''}`;
   const chip = (bg, h, s) => `<div style="background:${bg}"><b>${h}</b><br><span class="mute">${s}</span></div>`;
   const steps = [chip('var(--surface2)', short(J.legs[0].a, 9), '출발')];
   J.legs.forEach((g, i) => {
-    if (i > 0) steps.push(chip('color-mix(in srgb,var(--red) 18%,transparent)', '걸어가서 기다림', `<span style="color:var(--red);font-weight:700">${g.w != null ? fmt(g.w, 1) + '분' : '–'}</span>`));
+    if (i > 0) { const q = xq(g); steps.push(chip('color-mix(in srgb,var(--red) 18%,transparent)', '걸어가서 기다림', `<span style="color:var(--red);font-weight:700">${g.w != null ? '평균 ' + fmt(g.w, 1) + '분' : '–'}</span>${q ? `<br>15분+ ${pct(q.p15)} · 한 대 보냄 ${pct(q.m1)}` : ''}`)); }
     steps.push(chip(`color-mix(in srgb,var(--${g.mode === 'rail' ? 'blue' : 'green'}) 16%,transparent)`, g.mode === 'rail' ? g.r : g.r + '번', g.mode === 'rail' ? '지하철' : '버스'));
   });
   steps.push(chip('var(--surface2)', short(J.legs[J.legs.length - 1].z, 9), '도착'));
@@ -728,7 +731,7 @@ function flowSide(k, focusStop){
     <h3>대표 여정 (모형)</h3>
     <div class="strip" style="flex-wrap:wrap">${steps.join('<div class="arrow">→</div>')}</div>
     <p class="small mute" style="margin:6px 0 0">반출 집계에서 이 구간 승객이 가장 많이 쓴 지하철 구간·갈아탄 정류장을 공개 노선 경로(서울 열린데이터광장·OpenStreetMap)로 이은 설명용 모형입니다. 실제 한 사람의 기록이 아닙니다. 회색 선 = 같은 구간 다른 승객들이 쓴 조각. 갈아타기 분 = 내린 태그 → 다음 탄 태그(걸어가는 시간 + 기다린 시간).</p>
-    ${c.t ? `<div class="kpis"><div class="kpi"><div class="v">${fmt(c.t)}</div><div class="l">이 구간 하루 통행</div></div><div class="kpi red"><div class="v">${fmt(c.loss, 0)}<span style="font-size:13px">시간</span></div><div class="l">하루 갈아타며 쓰는 시간(합)</div></div><div class="kpi"><div class="v">${fmt(c.w, 1)}<span style="font-size:13px">분</span></div><div class="l">한 번 갈 때 갈아타며 쓰는 시간(평균 ${fmt(c.tr, 1)}번 갈아탐)</div></div></div>` : '<p class="small mute">이 구간은 통행 표본이 작아 평균값을 표시하지 않습니다.</p>'}
+    ${c.t ? `<div class="kpis"><div class="kpi"><div class="v">${fmt(c.t)}</div><div class="l">이 구간 하루 통행</div></div><div class="kpi red"><div class="v">${fmt(c.loss, 0)}<span style="font-size:13px">시간</span></div><div class="l">하루 갈아타며 쓰는 시간(합)</div></div><div class="kpi red"><div class="v">${fmt(c.w, 1)}<span style="font-size:13px">분</span></div><div class="l">한 번 갈 때 갈아타며 쓰는 시간(평균 ${fmt(c.tr, 1)}번 갈아탐, 걷기+기다림)</div></div></div>` : '<p class="small mute">이 구간은 통행 표본이 작아 평균값을 표시하지 않습니다.</p>'}
     ${rr.length ? `<h3 style="margin-top:12px">${short(stops.join('·'), 18)}에서 ${band} 때 갈아탄 버스</h3><table class="t"><tr><th>노선</th><th>정류장</th><th class="num">하루</th><th class="num">평균분</th><th class="num">놓침</th></tr>${rr.map(r => `<tr class="click" data-n="${r.n}" data-r="${r.r}" data-b="${r.b}" ${r.m1 >= .2 ? 'style="color:var(--red);font-weight:700"' : ''}><td>${short(rname(r.r), 10)}</td><td>${short(r.n, 9)}</td><td class="num">${fmt(r.t)}</td><td class="num">${fmt(r.m, 1)}</td><td class="num">${pct(r.m1)}</td></tr>`).join('')}</table>
     <div class="small mute" style="margin-top:6px">정류장 환승 전체 기준. 줄을 누르면 ① 장면으로. 빨강 = 놓침 20%+</div>` : ''}`;
   $('#side3').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => { show('scene'); pick(tr.dataset.n, tr.dataset.b, tr.dataset.r); scrollTo({top: 0, behavior: 'smooth'}); });

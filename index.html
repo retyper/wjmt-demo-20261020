@@ -93,6 +93,31 @@ input[type=range]{width:100%;accent-color:var(--red)}
 .timer{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tbar{height:14px;background:var(--surface2);border-radius:7px;overflow:hidden}
 .tbar>div{height:100%;width:0;border-radius:7px}
+/* 11/17 아이패드·발표용: 크게, 글은 팝오버로 */
+html,body{font-size:16px}
+header h1{font-size:30px}
+.tab{font-size:15.5px;padding:11px 18px;min-height:46px}
+.chip{font-size:14.5px;padding:8px 14px;min-height:40px}
+select,input[type=search]{font-size:16px;padding:10px 12px;min-height:44px}
+.btn{font-size:15px;padding:10px 16px;min-height:44px}
+.small{font-size:13.5px}
+.legend{font-size:13.5px;gap:8px 14px}
+.kpi{padding:10px 12px}
+.kpi .v{font-size:28px}
+.kpi .l{font-size:13.5px;color:var(--ink2);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.card h3{font-size:16.5px}
+table.t{font-size:14px}
+table.t td{padding:8px 4px}
+.mapbtns button{width:42px;height:42px;font-size:20px}
+.verdict{font-size:15px;padding:5px 11px}
+#tlPlay{padding:8px 14px!important;font-size:14px}
+.tabs{flex-wrap:wrap;overflow-x:visible}
+.ib{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:30px;height:30px;padding:0 9px;margin:0 2px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:var(--ink2);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;vertical-align:middle;line-height:1;white-space:nowrap}
+.ib:hover,.ib:focus-visible{border-color:var(--ink2);color:var(--ink);outline:none}
+.pop{position:absolute;z-index:60;display:none;max-width:380px;padding:12px 14px;border-radius:12px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.25);font-size:14px;line-height:1.6;text-align:left;font-weight:400}
+.pop .exp{display:inline} .pop div.exp{display:block}
+.pop b{color:var(--ink)}
+.tucked{margin:6px 0}
 </style>
 </head>
 <body>
@@ -103,8 +128,11 @@ input[type=range]{width:100%;accent-color:var(--red)}
   <div class="mute small">2026 데이터안심구역 활용 경진대회 · 데모</div>
   <h1>잔류승객지수 기반 수도권 통근버스 운행 최적화 솔루션</h1>
   <p style="margin:4px 0 6px;font-weight:700">버스가 와도 타지 못하고 남는 수요를 교통카드로 찾아, 어느 정류장·노선·시간대부터 개선할지 제시합니다.</p>
-  <p class="small"><b>잔류 승객</b> = 같은 노선 버스를 1대 이상 앞서 보내고 다음 차를 탄 것으로 <b>추정</b>되는 환승객(하차 + 공통 도보 4분 가정) · <b>잔류승객지수(LPI)</b> = 분석 대상 환승객 중 잔류 승객 비율(0~100%, 정류장×시간대×노선 칸) · 만차로 못 탄 사람 외에 일부러 다음 차를 기다린 사람, 4분보다 늦게 도착한 사람도 섞일 수 있음 · 버스는 카드의 차량 번호로 한 대씩 복원</p>
-  <span class="note">반출 승인 집계만 사용 · 화면 속 사람·버스는 집계로 재구성한 평균 승객 여정(개인 기록 아님) · <button class="chip" id="sgBtn" style="padding:1px 9px;font-size:12px">ⓘ 화면 설명 보기</button></span>
+  <div class="row" style="margin-top:10px">
+    <button type="button" class="chip" data-pop="&lt;b&gt;잔류 승객&lt;/b&gt; = 같은 노선 버스를 1대 이상 앞서 보내고 다음 차를 탄 것으로 &lt;b&gt;추정&lt;/b&gt;되는 환승객(하차 + 공통 도보 4분 가정)&lt;br&gt;&lt;b&gt;잔류승객지수(LPI)&lt;/b&gt; = 분석 대상 환승객 중 잔류 승객 비율(0~100%, 정류장×시간대×노선 칸)&lt;br&gt;만차로 못 탄 사람 외에 일부러 다음 차를 기다린 사람, 4분보다 늦게 도착한 사람도 섞일 수 있음&lt;br&gt;버스는 카드의 차량 번호로 한 대씩 복원">ⓘ 잔류승객지수란?</button>
+    <button type="button" class="chip" data-pop="반출 승인 집계만 사용 · 화면 속 사람·버스는 집계로 재구성한 평균 승객 여정(개인 기록 아님)">ⓘ 자료·개인정보</button>
+    <button type="button" class="chip" id="sgBtn">ⓘ 화면 설명 펼치기</button>
+  </div>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -125,7 +153,7 @@ input[type=range]{width:100%;accent-color:var(--red)}
       <div id="timeline" style="margin-top:6px"></div>
       <div class="small mute" id="stageCap" style="margin-top:4px"></div>
       <div id="dayBand" style="margin-top:10px"></div>
-      <h3 style="margin-top:14px">환승객 100명으로 줄여 본 비율 <span class="small mute" style="font-weight:400">(실제 100명이 아님)</span></h3>
+      <h3 style="margin-top:14px">환승객 100명으로 줄여 보면</h3>
       <div class="waffle" id="waffle"></div>
       <div class="small" id="waffleCap" style="margin-top:6px"></div>
       <div id="histBox" style="margin-top:14px"></div>
@@ -265,7 +293,32 @@ const sev = (v, lo, hi) => { let t = Math.max(0, Math.min(1, (v - lo) / (hi - lo
   return '#' + a.map((x, k) => Math.round(x + (b[k] - x) * f).toString(16).padStart(2, '0')).join(''); };
 const sevT = (v, lo, hi) => Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
 const gradLeg = (lab, lo, hi, unit) => `<span style="display:inline-flex;align-items:center;gap:6px">${lab} <span class="mute">${lo}${unit}</span><span style="display:inline-block;width:120px;height:10px;border-radius:5px;background:linear-gradient(90deg,${SEV.join(',')})"></span><span style="color:${SEV[4]};font-weight:700">${hi}${unit}+</span></span>`;
-document.getElementById('sgBtn').onclick = () => { document.body.classList.toggle('sg'); document.getElementById('sgBtn').textContent = document.body.classList.contains('sg') ? 'ⓘ 화면 설명 닫기' : 'ⓘ 화면 설명 보기'; };
+document.getElementById('sgBtn').onclick = () => { document.body.classList.toggle('sg'); document.getElementById('sgBtn').textContent = document.body.classList.contains('sg') ? 'ⓘ 화면 설명 접기' : 'ⓘ 화면 설명 펼치기'; };
+// ---------- 설명 팝오버(11/17): 마우스를 올리면 열리고, 누르면 고정(아이패드는 누르기). 바깥을 누르거나 Esc 로 닫힘 ----------
+const escA = h => String(h).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const ib = (h, label = 'ⓘ') => `<button type="button" class="ib" data-pop="${escA(h)}" aria-label="설명 보기">${label}</button>`;
+const POP = document.createElement('div'); POP.className = 'pop'; POP.setAttribute('role', 'dialog'); document.body.appendChild(POP);
+let popFor = null, popPinned = false;
+function popShow(t, pin){
+  POP.innerHTML = t.dataset.pop; POP.style.display = 'block'; popFor = t; popPinned = !!pin;
+  const w = Math.min(380, innerWidth - 24); POP.style.maxWidth = w + 'px'; POP.style.left = '0px'; POP.style.top = '0px';
+  const r = t.getBoundingClientRect(), pw = POP.offsetWidth, ph = POP.offsetHeight;
+  const x = Math.max(12, Math.min(innerWidth - pw - 12, r.left + r.width / 2 - pw / 2));
+  let y = r.bottom + 8; if (y + ph > innerHeight - 8 && r.top - ph - 8 > 8) y = r.top - ph - 8;
+  POP.style.left = (x + scrollX) + 'px'; POP.style.top = (y + scrollY) + 'px';
+}
+function popHide(){ POP.style.display = 'none'; popFor = null; popPinned = false; }
+document.addEventListener('pointerover', e => { if (e.pointerType !== 'mouse' || popPinned) return; const t = e.target.closest('[data-pop]'); if (t && t !== popFor) popShow(t, false); });
+document.addEventListener('pointerout', e => { if (e.pointerType !== 'mouse' || popPinned || !popFor) return; const to = e.relatedTarget; if (to && (popFor.contains(to) || POP.contains(to))) return; if (e.target.closest('[data-pop]') === popFor) popHide(); });
+POP.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !popPinned && !(e.relatedTarget && popFor && popFor.contains(e.relatedTarget))) popHide(); });
+document.addEventListener('click', e => { const t = e.target.closest('[data-pop]'); if (t) { e.preventDefault(); e.stopPropagation(); if (popFor === t && popPinned) popHide(); else popShow(t, true); return; } if (!POP.contains(e.target)) popHide(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') popHide(); });
+// 화면에 늘 떠 있던 긴 보조 문단(.small.mute, 45자 이상)은 'ⓘ 설명' 단추로 접는다. 짧은 안내는 그대로 둔다. data-keep 은 접지 않음
+function tuck(root){ if (!root || !root.querySelectorAll) return; root.querySelectorAll('p.small.mute, div.small.mute').forEach(el => {
+  if (el.dataset.tucked || el.hasAttribute('data-keep') || el.classList.contains('exp') || el.closest('.pop,.guide,svg')) return;
+  if (el.textContent.trim().length < 45) return;
+  el.dataset.tucked = 1; el.classList.add('tucked'); el.innerHTML = ib(el.innerHTML, 'ⓘ 설명'); }); }
+new MutationObserver(ms => { for (const m of ms) if (m.target.nodeType === 1 && !m.target.closest('svg')) for (const n of m.addedNodes) if (n.nodeType === 1) tuck(n.parentElement || n); }).observe(document.querySelector('.wrap'), {childList: true, subtree: true});
 const guide = rows => `<div class="guide">${rows.filter(r => r && r[1]).map(([k, v]) => `<div class="gk">${k}</div><div class="gv">${v}</div>`).join('')}</div>`;
 const vcls = v => v.startsWith('꽉') ? 'v-cap' : v.startsWith('간격') ? 'v-hw' : v.startsWith('측정') ? 'v-snd' : 'v-ok';
 
@@ -391,17 +444,18 @@ function renderScene(x){
     ['판정', `<span class="verdict ${vcls(x.v)}">${x.v.split('(')[0].trim()}</span> — 꽉 참 = 앞차를 보낸 비율이 20% 이상이고 놓친 버스의 절반 이상이 40명 넘게 탐 → 증차 / 간격 김 = 앞차를 보낸 비율이 20% 미만인데 평균 10분 넘게 기다림 → 배차 / 측정 한계 = 앞차를 보낸 비율이 20% 이상인데 버스는 덜 참(걷는 시간 4분 가정이 맞지 않는 곳으로, 개선 대상에서 제외) / 양호`],
   ]);
   $('#kpis').innerHTML = `
-    <div class="kpi"><div class="v">${fmt(x.t)}</div><div class="l">하루 갈아탄 사람</div></div>
-    <div class="kpi red"><div class="v">${pct(x.m1)}</div><div class="l">잔류승객지수: 같은 노선 버스를 1대 이상 보낸 것으로 추정된 비율<br>(하루 ${fmt(x.mn)}명, 38일 평균)${x.m2 != null ? `<br>2대 이상 놓침 <b>${pct(x.m2)}</b>(4일 표본)` : ''}</div></div>
-    <div class="kpi"><div class="v">${fmt(x.m, 1)}<span style="font-size:14px">분</span></div><div class="l">내려서 다음 차 타기까지 평균(걷기+기다림)</div></div>
-    <div class="kpi"><div class="v">${x.hw != null && x.b !== '그외' ? fmt(x.hw, 1) + '<span style="font-size:14px">분</span>' : '–'}</div><div class="l">평균 운행 간격 (${BL[x.b]} 4시간 ÷ ${fmt(x.bus)}회)</div></div>
-    <div class="kpi"><div class="v">${x.mn >= 1 ? fmt(x.ld2) + '<span style="font-size:14px">명</span>' : '–'}</div><div class="l">보낸 버스가 떠날 때 평균 차내 인원(승하차 누적 추정)</div></div>
-    <div class="kpi"><div class="v">${x.mn >= 1 ? pct(x.f40) : '–'}</div><div class="l">보낸 버스 중 40명+ 태운 차(40명은 정원이 아닌 기준값)</div></div>`;
+    <div class="kpi"><div class="v">${fmt(x.t)}</div><div class="l">하루 갈아탄 사람 ${ib('이 정류장에서 이 노선으로 갈아탄 사람(하루). 2026.6~8월 평일(화~목) 38일 평균.')}</div></div>
+    <div class="kpi red"><div class="v">${pct(x.m1)}</div><div class="l">잔류승객지수 ${ib(`갈아탄 사람 중 같은 노선 버스를 1대 이상 보낸 것으로 추정된 비율.<br>하루 ${fmt(x.mn)}명, 38일 평균.${x.m2 != null ? `<br>2대 이상 보낸 비율 ${pct(x.m2)}(4일 표본).` : ''}<br>내린 뒤 4분이면 정류장에 온다고 공통 가정.`)}</div></div>
+    <div class="kpi"><div class="v">${fmt(x.m, 1)}<span style="font-size:15px">분</span></div><div class="l">내려서 타기까지 ${ib('앞 차에서 내린 태그부터 이 버스에 탄 태그까지 평균. 걷기와 기다림을 합한 값.')}</div></div>
+    <div class="kpi"><div class="v">${x.hw != null && x.b !== '그외' ? fmt(x.hw, 1) + '<span style="font-size:15px">분</span>' : '–'}</div><div class="l">운행 간격 ${ib(`${BL[x.b]} 4시간 ÷ 하루 평균 ${fmt(x.bus)}회. 고르게 온다고 본 평균이며, 실제로는 몰려 오는 때와 비는 때가 있다(아래 30분 막대).`)}</div></div>
+    <div class="kpi"><div class="v">${x.mn >= 1 ? fmt(x.ld2) + '<span style="font-size:15px">명</span>' : '–'}</div><div class="l">보낸 버스 탑승 ${ib('앞차를 보낸 사람이 놓친 버스가 이 정류장을 떠날 때 평균 차내 인원(차량별 승하차 누적 추정).')}</div></div>
+    <div class="kpi"><div class="v">${x.mn >= 1 ? pct(x.f40) : '–'}</div><div class="l">40명+ 버스 ${ib('보낸 버스 중 40명 넘게 태우고 떠난 차의 비율. 40명은 정원이 아니라 판정 기준값이다.')}</div></div>`;
   $('#cmp').innerHTML = '';
   const rx = x.v.startsWith('꽉') ? `평균 ${fmt(x.hw, 1)}분 간격으로 오는데도 앞차를 보낸 비율이 높고, 보낸 버스 대부분이 40명 넘게 태운 칸이다. 검토 제안 순서: <b>① 지수가 높은 30분 칸에 운행 집중(집중배차·중간배차) → ② 남으면 증차</b>. 근사 손실 하루 약 ${fmt(x.mn * x.hw)} 인·분(${fmt(x.mn)}명 × 평균 간격 ${fmt(x.hw, 1)}분, 실제 개인 대기 합계 아님).`
     : x.v.startsWith('측정') ? `앞차를 보낸 사람은 10명 중 2명 이상인데 놓친 버스는 덜 찬 칸. 걷는 시간을 4분으로 고정해 세었기 때문에, 지하철 출구에서 승강장까지 4분 넘게 걸리는 곳은 걷는 동안 지나간 버스까지 '놓친 버스'로 세어진다(안양역 2번: 버스가 4분마다 오고 떠날 때 13~18명뿐인데 10명 중 3~4명이 앞차를 보낸 것으로 세어짐). 2층버스(정원 70명대)도 40명 기준이 맞지 않는다. 지수가 과대인 칸이므로 개선안·순위에서 뺐고, 정류장별 걷는 시간을 재서 다시 셀 때까지 '측정 한계'로 둔다`
     : x.v.startsWith('간격') ? `앞차를 보낸 사람은 10명 중 ${fmt(x.m1 * 10, 0)}명인데 내려서 다음 차를 타기까지 평균 ${fmt(x.m, 1)}분이 걸리는 칸이다. 만차보다 버스 간격의 영향이 큰 칸이라 배차 간격 조정 검토를 제안한다.` : '앞차를 보낸 사람 비율도 낮고 평균 대기도 10분 미만인 칸이다. 지금은 손볼 우선순위가 낮다.';
-  $('#verdict').innerHTML = `<span class="verdict ${vcls(x.v)}">${x.v}</span> <span class="small">${rx}</span>
+  const vShort = x.v.split('(')[0].trim();
+  $('#verdict').innerHTML = `<span class="verdict ${vcls(x.v)}">${vShort}</span> ${ib(`<b>${x.v}</b><br>${rx}<br><br><span style="color:var(--mute)">판정: 앞차를 1대+ 보낸 사람 20% 이상이고 보낸 버스 절반 이상이 40명+ = 꽉 참 / 20% 이상인데 보낸 버스가 덜 참 = 측정 한계 / 20% 미만인데 평균 10분+ = 간격 김 / 그 외 = 양호. 2026.6~8월 평일(화~목) 38일, 차량 단위 복원.</span>`, 'ⓘ 왜?')}
     <div class="small mute exp" style="margin-top:6px">판정: 앞차를 1대+ 보낸 사람 20% 이상이고 보낸 버스 절반 이상이 40명+ = 꽉 참 / 20% 이상인데 보낸 버스가 덜 참 = 측정 한계 / 20% 미만인데 평균 10분+ = 간격 김 / 그 외 = 양호. 2026.6~8월 평일(화~목) 38일, 차량 단위 복원.</div>`;
   if (x.b === '그외') $('#verdict').insertAdjacentHTML('beforeend', '<div class="small mute" style="margin-top:6px">주의: 그 외 시간대 값은 회차·종점 정류장에서 10분 넘게 서 있는 버스를 두 번 셀 수 있어 앞차를 보낸 사람이 실제보다 많을 수 있다(재집계 전 값).</div>');
   // 같은 정류장·노선, 시간대별 놓침 — '원래 안 타는 사람'(자리 기다림 등)이면 시간대마다 비슷해야 한다
@@ -411,13 +465,13 @@ function renderScene(x){
   // 와플
   const k1 = Math.round(x.m1 * 100), k2 = x.m2 != null ? Math.min(k1, Math.round(x.m2 * 100)) : 0;
   $('#waffle').innerHTML = Array.from({length: 100}, (_, i) => `<span class="${i < k2 ? 'm2' : i < k1 ? 'm1' : ''}"></span>`).join('');
-  $('#waffleCap').innerHTML = `분석 대상 환승객 100명당 <b style="color:var(--red)">${k1}명</b>이 같은 노선 버스를 1대 이상 보낸 것으로 추정(38일 평균 = 잔류승객지수 ${pct(x.m1)})${k2 ? `. 2대 이상 보낸 비율 <b style="color:var(--red2)">${k2}명</b>은 다른 표본(2026 여름 4일)에서 붙인 값` : ''}.`;
+  $('#waffleCap').innerHTML = `100명 중 <b style="color:var(--red)">${k1}명</b>이 앞차를 보냄${k2 ? ` · 진한 칸 ${k2}명 = 2대 이상` : ''} ${ib(`분석 대상 환승객 100명당 ${k1}명이 같은 노선 버스를 1대 이상 보낸 것으로 추정(38일 평균 = 잔류승객지수 ${pct(x.m1)})${k2 ? `. 2대 이상 보낸 비율 ${k2}명은 다른 표본(2026 여름 4일)에서 붙인 값` : ''}.`)}`;
   // 분포
   const h = D.hist[`${x.n}|${x.b}|${x.r}`];
   if (h) {
     const m = Math.max(...h);
-    $('#histBox').innerHTML = `<h3>내려서 다음 차 타기까지 걸린 시간 분포 (걷기 포함, 3분 구간, 2026 여름 4일 표본)</h3><div style="display:flex;align-items:flex-end;gap:3px;height:90px">${h.map((v, i) => `<div title="${D.histBins[i]} ${pct(v)}" style="flex:1;height:${Math.max(2, v / m * 86)}px;background:${i >= 5 ? 'var(--red)' : 'var(--ink2)'};border-radius:3px 3px 0 0"></div>`).join('')}</div>
-      <div style="display:flex;gap:3px" class="small mute">${D.histBins.map(b => `<div style="flex:1;text-align:center;font-size:10px">${b.replace('분', '')}</div>`).join('')}</div><div class="small mute">빨강 = 15분 이상</div>`;
+    $('#histBox').innerHTML = `<h3>내려서 다음 차 타기까지 걸린 시간 ${ib('걷기 포함, 3분 구간, 2026 여름 4일 표본. 빨강 = 15분 이상.')}</h3><div style="display:flex;align-items:flex-end;gap:3px;height:90px">${h.map((v, i) => `<div title="${D.histBins[i]} ${pct(v)}" style="flex:1;height:${Math.max(2, v / m * 86)}px;background:${i >= 5 ? 'var(--red)' : 'var(--ink2)'};border-radius:3px 3px 0 0"></div>`).join('')}</div>
+      <div style="display:flex;gap:3px" class="small mute" data-keep>${D.histBins.map(b => `<div style="flex:1;text-align:center;font-size:10px">${b.replace('분', '')}</div>`).join('')}</div>`;
   } else $('#histBox').innerHTML = '';
   playScene(x);
 }
@@ -466,20 +520,20 @@ function playScene(x, startMin){
   const rt = el('text', {x: 52, y: 136, fill: ink, 'font-size': 15, 'font-weight': 800}, s); rt.textContent = rname(x.r) + '번';
   const clk = el('text', {x: 12, y: 30, fill: ink, 'font-size': 22, 'font-weight': 800}, s);
   { const tg = el('text', {x: 12, y: 68, fill: css('--red'), 'font-size': 12, 'font-weight': 800}, s); tg.textContent = '모의 장면 · 실제 줄 아님'; }
-  const clkl = el('text', {x: 12, y: 48, fill: mute, 'font-size': 11}, s); clkl.textContent = `${BL[x.b]} · 배차 ${fmt(x.b !== '그외' && x.hw ? x.hw : Math.max(4, x.m), 1)}분을 5초로`;
+  const clkl = el('text', {x: 12, y: 48, fill: mute, 'font-size': 12}, s); clkl.textContent = `${BL[x.b]} · 배차 ${fmt(x.b !== '그외' && x.hw ? x.hw : Math.max(4, x.m), 1)}분을 5초로`;
   // 기록판
   const led = el('g', {transform: 'translate(300,8)'}, s);
   el('rect', {x: 0, y: 0, width: 592, height: 84, rx: 10, fill: surf}, led);
-  const h1 = el('text', {x: 14, y: 22, 'font-size': 12, fill: mute}, led); h1.textContent = '승차 기록에 남는 것: 갈아타고 탄 사람';
+  const h1 = el('text', {x: 14, y: 22, 'font-size': 13, fill: mute}, led); h1.textContent = '기록에 남는 것: 갈아타고 탄 사람';
   const v1 = el('text', {x: 14, y: 52, 'font-size': 24, fill: ink, 'font-weight': 800}, led);
   const n1 = el('text', {x: 150, y: 52, 'font-size': 11, fill: mute}, led);
   el('line', {x1: 292, x2: 292, y1: 10, y2: 60, stroke: css('--line')}, led);
-  const h2 = el('text', {x: 306, y: 22, 'font-size': 12, fill: c2, 'font-weight': 700}, led); h2.textContent = '승차 기록에 안 남는 것: 앞차를 보낸 사람(추정)';
+  const h2 = el('text', {x: 306, y: 22, 'font-size': 13, fill: c2, 'font-weight': 700}, led); h2.textContent = '기록에 안 남는 것: 앞차를 보낸 사람(추정)';
   const v2 = el('text', {x: 306, y: 52, 'font-size': 24, fill: c1, 'font-weight': 800}, led);
-  const v3 = el('text', {x: 306, y: 74, 'font-size': 12, fill: c2, 'font-weight': 700}, led);
-  const n2 = el('text', {x: 14, y: 74, 'font-size': 11, fill: mute}, led);
+  const v3 = el('text', {x: 306, y: 74, 'font-size': 13, fill: c2, 'font-weight': 700}, led);
+  const n2 = el('text', {x: 14, y: 74, 'font-size': 12.5, fill: mute}, led);
   const msg = el('text', {x: 596, y: 116, 'text-anchor': 'middle', fill: ink, 'font-size': 14, 'font-weight': 700}, s);
-  const note = el('text', {x: 596, y: 136, 'text-anchor': 'middle', fill: css('--red'), 'font-size': 12, 'font-weight': 700}, s);
+  const note = el('text', {x: 596, y: 138, 'text-anchor': 'middle', fill: css('--red'), 'font-size': 13.5, 'font-weight': 700}, s);
   // 버스
   const bus = el('g', {}, s), BW = 300;
   el('rect', {x: 0, y: 0, width: BW, height: 92, rx: 12, fill: css('--green')}, bus);
@@ -489,7 +543,7 @@ function playScene(x, startMin){
   const bl = el('text', {x: 180, y: 82, 'text-anchor': 'middle', fill: '#fff', 'font-size': 17, 'font-weight': 800}, bus); bl.textContent = rname(x.r);
   const full = el('text', {x: BW / 2, y: 120, 'text-anchor': 'middle', fill: c2, 'font-size': 22, 'font-weight': 800}, bus);
   // 왼쪽 큰 숫자: 지금 서 있는 사람 · 이번 차에 탄 사람 · 못 타고 남은 사람
-  let waiting0 = 0; const lb = (y, t, col) => { const a = el('text', {x: 12, y, fill: col, 'font-size': 11}, s); a.textContent = t; };
+  let waiting0 = 0; const lb = (y, t, col) => { const a = el('text', {x: 12, y, fill: col, 'font-size': 13}, s); a.textContent = t; };
   lb(154, '지금 서 있는 사람', mute); const bigW = el('text', {x: 12, y: 178, fill: ink, 'font-size': 24, 'font-weight': 800}, s);
   lb(196, '이번 차에 탄 사람', mute); const bigN = el('text', {x: 12, y: 220, fill: css('--green'), 'font-size': 24, 'font-weight': 800}, s);
   lb(238, '못 타고 남은 사람', c2); const bigL = el('text', {x: 12, y: 262, fill: c2, 'font-size': 24, 'font-weight': 800}, s);
@@ -532,19 +586,19 @@ function playScene(x, startMin){
   const TL = $('#timeline');
   if (cells.length) {
     const mx = Math.max(...cells.map(c => c.mn)), bw = 900 / 32 - 2, xo = m => (m - 360) / 960 * 900;
-    TL.innerHTML = `<div class="small" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="tlCap"></span><span style="display:inline-flex;gap:6px"><button class="chip ${nostopMode ? 'on' : ''}" id="nsBtn" style="padding:2px 10px;display:none">${nostopMode ? '정차 후 일부 탑승(지수 범위)' : '만차 무정차 보기(지수 밖)'}</button><button class="chip" id="tlPlay" style="padding:2px 10px">⏸ 멈춤</button></span></div>
+    TL.__ck = null; TL.innerHTML = `<div class="small" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="tlCap"></span><span style="display:inline-flex;gap:6px"><button class="chip ${nostopMode ? 'on' : ''}" id="nsBtn" style="padding:2px 10px;display:none">${nostopMode ? '정차 후 일부 탑승(지수 범위)' : '만차 무정차 보기(지수 밖)'}</button><button class="chip" id="tlPlay" style="padding:2px 10px">⏸ 멈춤</button></span></div>
       <svg viewBox="0 0 900 78" style="width:100%;display:block;cursor:pointer" id="tlSvg">
       ${cells.map(c => { const h = 6 + 46 * c.mn / mx; const col = c === peak ? c2 : (c.min >= bandRange[0] && c.min < bandRange[1] ? c1 : css('--line')); return `<rect data-min="${c.min}" x="${xo(c.min) + 1}" y="${62 - h}" width="${bw}" height="${h}" rx="2" fill="${col}"><title>${String(c.hh).padStart(4, '0')} 갈아탄 ${fmt(c.t)} · 앞차 보냄 ${fmt(c.mn)} · 버스 ${fmt(c.bus, 1)}대${c.ld != null ? ` · 보낸 버스 평균 ${fmt(c.ld)}명` : ''}</title></rect>`; }).join('')}
       ${[6, 9, 12, 15, 18, 21].map(h => `<text x="${xo(h * 60)}" y="75" font-size="9" fill="${mute}">${h}:00</text>`).join('')}
       <text x="${Math.min(800, xo(peak.min) + bw + 4)}" y="${Math.max(10, 62 - (6 + 46) + 4)}" font-size="10" font-weight="800" fill="${c2}">최고 ${String(peak.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} · 앞차 보냄 ${fmt(peak.mn)}명</text>
       <line id="tlHead" x1="0" x2="0" y1="4" y2="64" stroke="${ink}" stroke-width="2"/></svg>
-      <div class="small mute">막대 = 30분마다 앞차를 보낸 사람(6/9·7/8·8/12 3일 평균) · 진한 색 = ${BL[x.b]} 시간대 · 가장 진한 막대 = 하루 최고 · 막대를 누르면 그 30분 칸을 반복 재생</div>`;
+      <div class="small mute" data-keep>막대를 누르면 그 30분 칸을 반복 재생 ${ib(`막대 = 30분마다 앞차를 보낸 사람(6/9·7/8·8/12 3일 평균) · 진한 색 = ${BL[x.b]} 시간대 · 가장 진한 막대 = 하루 최고`)}</div>`;
     $('#tlSvg').addEventListener('click', e => { const r = e.target.closest('rect[data-min]'); let m; if (r) m = +r.dataset.min; else { const bb = e.currentTarget.getBoundingClientRect(); m = Math.floor((360 + (e.clientX - bb.left) / bb.width * 960) / 30) * 30; } playScene(null, m); });
     $('#tlPlay').onclick = () => { scenePaused = !scenePaused; $('#tlPlay').textContent = scenePaused ? '▶ 재생' : '⏸ 멈춤'; };
     $('#nsBtn').onclick = () => { nostopMode = !nostopMode; playScene(null, sceneStart); };
   } else TL.innerHTML = '<div class="small mute">이 칸은 30분 단위 집계(수도권 전역판)에 없어 시간대 평균으로만 재생한다.</div>';
   const P1S = cur ? cur.p1 : p1, CELLS = cur ? `${String(cur.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} 칸 ` : '';
-  $('#stageCap').innerHTML = `<b>모의 장면</b>: 실제 줄을 센 것이 아니라, ${CELLS}카드로 잰 비율(${pct(P1S)})이 나오도록 사람이 몰려 오는 크기를 맞춰 그린 그림이다. 장면은 자리가 모자라 남는 경우만 그리지만, 실제 지수에는 일부러 다음 차를 기다린 사람·4분보다 늦게 도착한 사람도 섞일 수 있다.<span class="exp"> 줄 선 순서대로 타고, 버스마다 이 정류장에서 태울 수 있는 자리는 약 ${CAP}명으로 같다고 두었다(꽉 차서 도착하는 버스는 그리지 않음). 사람은 지하철 열차가 올 때 몰려 배차마다 오는 수가 다르고, 줄이 자리보다 길 때 뒤쪽이 남는다. 이 몰림 크기를 카드 실측 비율(${pct(P1S)})에 맞춰 골랐고, 줄이 쌓인 뒤의 한 구간부터 재생한다(그 구간의 비율 ${pct(cur ? cur.fq.r.w : FQ.r.m1)}). 30분 칸마다 따로 맞췄기 때문에 고른 칸만 반복한다. 보낸 버스의 절반 이상이 40명 넘게 태우고 떠난 칸만 이렇게 그리고, 그보다 덜 찬 칸(예: 사당 낮 시간)은 모두 타는 장면으로 두고 지수를 측정 한계로 표시한다. 장면 속 사람은 분석 대상 환승객만이다.</span>`;
+  $('#stageCap').innerHTML = `<b>모의 장면</b> · 실제 줄이 아니라 ${CELLS}카드 비율(${pct(P1S)})에 맞춘 그림 ${ib(`실제 줄을 센 것이 아니라, ${CELLS}카드로 잰 비율(${pct(P1S)})이 나오도록 사람이 몰려 오는 크기를 맞춰 그린 그림이다. 장면은 자리가 모자라 남는 경우만 그리지만, 실제 지수에는 일부러 다음 차를 기다린 사람·4분보다 늦게 도착한 사람도 섞일 수 있다.<span class="exp"> 줄 선 순서대로 타고, 버스마다 이 정류장에서 태울 수 있는 자리는 약 ${CAP}명으로 같다고 두었다(꽉 차서 도착하는 버스는 그리지 않음). 사람은 지하철 열차가 올 때 몰려 배차마다 오는 수가 다르고, 줄이 자리보다 길 때 뒤쪽이 남는다. 이 몰림 크기를 카드 실측 비율(${pct(P1S)})에 맞춰 골랐고, 줄이 쌓인 뒤의 한 구간부터 재생한다(그 구간의 비율 ${pct(cur ? cur.fq.r.w : FQ.r.m1)}). 30분 칸마다 따로 맞췄기 때문에 고른 칸만 반복한다. 보낸 버스의 절반 이상이 40명 넘게 태우고 떠난 칸만 이렇게 그리고, 그보다 덜 찬 칸(예: 사당 낮 시간)은 모두 타는 장면으로 두고 지수를 측정 한계로 표시한다. 장면 속 사람은 분석 대상 환승객만이다.</span>`)}`;
   function frame(now){
     anim = requestAnimationFrame(frame);
     if (!$('#p-scene').classList.contains('on') || document.hidden) { last = null; return; }
@@ -595,10 +649,11 @@ function playScene(x, startMin){
     clk.textContent = `${Math.floor(mins / 60) % 24}:${String(Math.floor(mins % 60)).padStart(2, '0')}`;
     clkl.textContent = `${BL[x.b]} · 이 30분 칸 운행 간격 ${fmt(hwNow(), 1)}분을 5초로`;
     if (cells.length) { const hd = $('#tlHead'); if (hd) { const xx = (mins - 360) / 960 * 900; hd.setAttribute('x1', xx); hd.setAttribute('x2', xx); }
-      const cc = cur ? cur.c : null; $('#tlCap').innerHTML = cc ? `지금 <b>${String(cc.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} 칸</b>: 갈아탄 ${fmt(cc.t)}명 · 앞차를 보낸 ${fmt(cc.mn)}명(${pct(cc.mn / cc.t)}) · 버스 ${fmt(cc.bus, 1)}회(간격 ${fmt(30 / cc.bus, 1)}분)${cc.ld != null ? ` · 보낸 버스 평균 ${fmt(cc.ld)}명 탑승(40명+ ${pct(cc.f40)})` : ''} — 30분 칸, 6/9·7/8·8/12 3일 평균` : '이 시각은 집계 칸이 없다(하루 10명 미만)'; }
+      const cc = cur ? cur.c : null, ck = cc ? cc.hh : -1;   // 칸이 바뀔 때만 다시 씀(팝오버 단추가 매 프레임 새로 생기지 않게)
+      if (TL.__ck !== ck) { TL.__ck = ck; $('#tlCap').innerHTML = cc ? `<b style="font-size:15px">${String(cc.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} 칸</b> 갈아탄 ${fmt(cc.t)}명 중 <b style="color:var(--red)">${fmt(cc.mn)}명(${pct(cc.mn / cc.t)})</b> 앞차 보냄 ${ib(`갈아탄 ${fmt(cc.t)}명 · 앞차를 보낸 ${fmt(cc.mn)}명(${pct(cc.mn / cc.t)}) · 버스 ${fmt(cc.bus, 1)}회(간격 ${fmt(30 / cc.bus, 1)}분)${cc.ld != null ? ` · 보낸 버스 평균 ${fmt(cc.ld)}명 탑승(40명+ ${pct(cc.f40)})` : ''}<br>30분 칸, 6/9·7/8·8/12 3일 평균`)}` : '이 시각은 집계 칸이 없다(하루 10명 미만)'; } }
     v1.textContent = `하루 ${fmt(x.t)}명`; n1.textContent = ''; n2.textContent = `${rname(x.r)}번으로 갈아탄 사람 · 38일 평균`;   // 오른쪽(보낸 사람)과 같은 38일 환승 기준. 4일 표본 승차 합계(x.bd)는 환승 아닌 승객까지 들어 있어 나란히 두지 않는다
     v2.textContent = `하루 ${fmt(x.mn)}명`; v3.textContent = x.mn >= 1 ? `갈아탄 사람의 ${pct(x.m1)} · 38일 평균` : '교통카드 하차·승차 연결로 추정';
-    const thin = cur && !cur.crowd; note.textContent = thin ? `이 칸은 보낸 버스가 평균 ${fmt(cur.c.ld)}명만 태우고 떠남(40명+ ${pct(cur.c.f40)}): 자리 부족 아님, 지수 ${pct(cur.p1)}는 측정 한계` : '';
+    const thin = cur && !cur.crowd; note.textContent = thin ? `보낸 버스 평균 ${fmt(cur.c.ld)}명만 탑승 → 자리 부족 아님 (지수 ${pct(cur.p1)}는 측정 한계)` : '';
     msg.textContent = nostopMode ? '만차 무정차: 버스가 서지 않고 지나간다. 승차 태그가 없어 잔류승객지수에는 잡히지 않는다(별도 추정: 출근 광역 48노선 하루 196회·716명, 6/9)' : u < ARR ? '버스가 들어온다(앱 안내대로 도착).'
       : boarding ? (lastLeft ? `앞에서부터 ${lastN}명이 타고 꽉 찼다. 뒤쪽 ${lastLeft}명은 남고, 승차 기록에는 ${lastN}명만 남는다.` : thin ? `${lastN}명이 다 탔다(자리 남음).` : `밀린 줄까지 ${lastN}명이 다 탔다.`)
       : u < ARR + DW + DEP ? (thin ? '버스가 자리를 남기고 떠난다.' : '버스가 떠나고, 남은 사람은 승차 기록에 없다.')
@@ -884,7 +939,7 @@ function draw4(){
       bindDot(m4, c, `<b>${n}</b> ${BL[band4]}<br><b style="color:${RED}">만차 유형(탈 자리 부족 가능성)</b><br>${rname(r0.r)}: 10명 중 ${fmt(r0.m1 * 10, 1)}명(하루 ${fmt(r0.mn)}명)이 같은 노선 버스를 1대 이상 보낸 것으로 추정, 보낸 버스의 ${pct(r0.f40)}가 떠날 때 40명 넘게 태움 → 집중배차·증차 검토`, () => { show('scene'); pick(n, band4, r0.r); }); }
   }
   m4.rescale();
-  $('#leg4').innerHTML = `<span><i style="background:${RED};border-radius:50%"></i><b>빨간 동그라미</b> = 만차 유형(앞차를 보낸 사람 20%+, 보낸 버스 절반 이상 40명+) → 공급 보강 검토</span><span><i style="background:none;border:2px solid ${BLUE};border-radius:2px"></i><b>파란 네모</b> = 버스 간격이 길어 오래 기다리는 곳(앞차를 보낸 사람 20% 미만, 평균 10분+) → 배차 간격 조정 검토</span><span><i style="background:none;border:2px dashed ${GREY};border-radius:50%"></i><b>회색 점선</b> = 측정 한계(앞차를 보낸 사람 20%+인데 보낸 버스가 덜 참 — 늦은 도착·자발적 대기 가능성, 개선안 제외)</span><span class="mute">표시 크기 = 하루 사람 수 · 누르면 ① 장면</span>`;
+  $('#leg4').innerHTML = `<span><i style="background:${RED};border-radius:50%"></i><b>빨간 원</b> 만차 → 공급 보강 ${ib('앞차를 보낸 사람 20%+, 보낸 버스 절반 이상이 40명+ 태우고 떠남 → 공급 보강 검토')}</span><span><i style="background:none;border:2px solid ${BLUE};border-radius:2px"></i><b>파란 네모</b> 간격 김 → 배차 조정 ${ib('앞차를 보낸 사람 20% 미만인데 내려서 타기까지 평균 10분+ → 배차 간격 조정 검토')}</span><span><i style="background:none;border:2px dashed ${GREY};border-radius:50%"></i><b>회색 점선</b> 측정 한계 ${ib('앞차를 보낸 사람 20%+인데 보낸 버스가 덜 참 — 늦은 도착·자발적 대기 가능성. 개선안에서 뺌')}</span><span class="mute">표시 크기 = 하루 사람 수 · 누르면 ① 장면</span>`;
   const capTop = rows.filter(r => r.v.startsWith('꽉')).sort((a, b) => b.mn - a.mn).slice(0, 5);
   const hwTop = rows.filter(r => r.v.startsWith('간격')).sort((a, b) => b4(b) - b4(a)).slice(0, 5);
   const sndTop = rows.filter(r => r.v.startsWith('측정')).sort((a, b) => b.mn - a.mn).slice(0, 3);
@@ -907,11 +962,12 @@ function drawAlloc(){
   const so = rows.reduce((a, r) => a + r.xo * per(r), 0), sb = rows.reduce((a, r) => a + r.xb * per(r), 0);
   const c20 = A.curve.find(c => c.N === 20) || {};
   $('#allocCard').innerHTML = `<h3>추가 운행 20회를 어디에 나누나 — 기획서 20쪽 모형</h3>
-    <div class="guide" style="display:grid;grid-template-columns:88px 1fr;gap:3px 10px;font-size:13.5px;line-height:1.45;margin:6px 0 10px">
+    <div class="kpis" style="grid-template-columns:1fr 1fr;max-width:560px"><div class="kpi red"><div class="v">${fmt(c20.opt)}명</div><div class="l">잔류 기준으로 20회 배분 시 하루 감소</div></div><div class="kpi"><div class="v">${fmt(c20.brd)}명</div><div class="l">승차 많은 순으로 배분 시</div></div></div>
+    <div style="margin:-2px 0 10px">${ib(`<div style="display:grid;grid-template-columns:88px 1fr;gap:3px 10px;font-size:13.5px;line-height:1.45;margin:6px 0 10px">
       <div class="gk">① 넣은 것</div><div class="gv">만차 근거가 있는 출근·퇴근 후보 칸(38일 평균)의 <b>하루 잔류 인원</b>과 <b>기존 운행 횟수</b>. 추가 1회는 혼잡 정류장 직전에서 빈 좌석 45석으로 들어오는 구간운행으로 가정. 노선별 추가는 기존 운행의 25%까지. <b>합계 추가 20회</b>(차량 20대·시간표가 아님).</div>
       <div class="gk">② 계산</div><div class="gv">추가 1회가 줄이는 잔류 ≈ 잔류 인원 ÷ 기존 운행(직전 버스가 남긴 사람만 태운다고 보는 보수 모형). 이 감소의 합이 가장 커지도록 정수계획(MILP)으로 20회를 나눔.</div>
       <div class="gk">③ 나온 것</div><div class="gv">잔류 최소화 배분은 하루 <b>${fmt(c20.opt)}명</b> 감소, 같은 20회를 환승 승차가 많은 순으로 나누면 <b>${fmt(c20.brd)}명</b> 감소(같은 효과 산식으로 계산). 실제 감소 실적이 아닌 모형 추정이다.</div>
-    </div>
+    </div>`, 'ⓘ 계산 방법')}</div>
     <table class="t"><tr><th>노선 · 시간대</th><th class="num">현재 잔류/일</th><th class="num">기존 운행/일</th><th class="num">1회당 감소</th><th class="num">잔류 최소화 배분</th><th class="num">승차 많은 순 배분</th></tr>
     ${rows.map(r => `<tr><td>${nm(r)} ${r.b}</td><td class="num">${fmt(r.R)}</td><td class="num">${fmt(r.nb, 1)}</td><td class="num">${fmt(per(r), 1)}명</td><td class="num">${r.xo ? `<b>+${r.xo}회 → ${fmt(r.xo * per(r))}명</b>` : '–'}</td><td class="num">${r.xb ? `+${r.xb}회 → ${fmt(r.xb * per(r))}명` : '–'}</td></tr>`).join('')}
     <tr style="font-weight:800"><td>합계</td><td></td><td></td><td></td><td class="num">+${rows.reduce((a, r) => a + r.xo, 0)}회 → ${fmt(so)}명</td><td class="num">+${rows.reduce((a, r) => a + r.xb, 0)}회 → ${fmt(sb)}명</td></tr></table>

@@ -424,21 +424,28 @@ function renderScene(x){
 // 정류장 장면: 무한 반복. 줄 선 순서대로(앞사람부터) 타고, 버스마다 빈자리 수가 달라 뒤쪽이 남는다 → 남은 사람의 놓친 수가 자연히 오른다.
 //   버스가 이 정류장에서 태울 수 있는 자리 C 는 일정(평균 승차의 1.0~1.25배), 사람은 지하철 열차가 올 때 한꺼번에 몰린다.
 //   C·몰림 크기·주기를 놓침 1대+ 비율(카드 실측, 38일 차량 단위)과 버스 한 대 승차(승차 합계 ÷ 실제 차 수)가 맞도록 고른다.
-function fitQueue(p1, p2, per){
+function fitQueue(p1, p2, per, win){
   // 모의 장면(실측 아님): 버스마다 이 정류장에서 태울 수 있는 자리는 같다(C). 꽉 차서 도착하는 버스는 두지 않는다(기점 정류장도 그대로 성립).
   // 사람은 지하철 열차가 올 때 몰려 배차마다 오는 수가 다르다(흔들림 sp). C(평균 도착의 1.0~1.5배)와 sp 를 카드 실측 '앞차를 보낸 비율'(p1)에 맞춘다.
-  const N = 240;
-  const run = (kk, sp) => { let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // 이 비율은 줄이 충분히 쌓인 뒤의 값이다. 그래서 장면은 빈 줄에서 시작하지 않고, 같은 모의 줄에서 win 대(30분 칸의 운행 수) 동안의 비율이
+  // p1 에 가장 가까운 구간(k0)을 골라 그때 서 있던 줄(q0: [보낸 대수, 인원])부터 재생한다. (11/17 수정: 빈 줄 시작 때문에 남는 사람이 0으로 보이던 문제)
+  const N = 240, K0 = 40;
+  const run = (kk, sp, tr) => { let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     const arr = []; for (let k = 0; k < N; k++) { const z = (rnd() + rnd() + rnd() - 1.5) * 2; arr.push(Math.max(0, Math.round(per * (1 + sp * z)))); }
     const C = Math.max(1, Math.round(per * kk));
-    let Q = [], n = 0, m1 = 0, m2 = 0;
-    for (let k = 0; k < N; k++) { if (arr[k]) Q.push([0, arr[k]]); let c = C;
-      while (c > 0 && Q.length) { const g = Q[0], t = Math.min(c, g[1]); n += t; if (g[0] >= 1) m1 += t; if (g[0] >= 2) m2 += t; g[1] -= t; c -= t; if (!g[1]) Q.shift(); }
+    let Q = [], n = 0, m1 = 0, m2 = 0; const st = [];
+    for (let k = 0; k < N; k++) { if (tr) st.push({q: Q.map(g => g.slice()), b: 0, b1: 0});
+      if (arr[k]) Q.push([0, arr[k]]); let c = C, b = 0, b1 = 0;
+      while (c > 0 && Q.length) { const g = Q[0], t = Math.min(c, g[1]); n += t; b += t; if (g[0] >= 1) { m1 += t; b1 += t; } if (g[0] >= 2) m2 += t; g[1] -= t; c -= t; if (!g[1]) Q.shift(); }
+      if (tr) { st[k].b = b; st[k].b1 = b1; }
       Q.forEach(g => g[0]++); if (Q.reduce((a, g) => a + g[1], 0) > 6 * per) return null; }
-    return n ? {m1: m1 / n, m2: m2 / n, arr, C} : null; };
+    return n ? {m1: m1 / n, m2: m2 / n, arr, C, st} : null; };
   let best = null;
   for (let kk = 1.0; kk <= 1.5; kk += .02) for (let sp = 0; sp <= 1.2; sp += .1) { const r = run(kk, sp); if (!r) continue; const e = (r.m1 - p1) ** 2 + (p2 == null ? 0 : .5 * (r.m2 - p2) ** 2) + .0003 * sp; if (!best || e < best.e) best = Object.assign({e, kk, sp}, r); }
-  return best ? {C: best.C, caps: [best.C], arr: best.arr, sp: best.sp, r: {m1: best.m1, m2: best.m2}} : {C: per, caps: [per], arr: [per], sp: 0, r: {m1: 0, m2: 0}};
+  if (!best) return {C: per, caps: [per], arr: [per], sp: 0, r: {m1: 0, m2: 0}, k0: 0, q0: []};
+  const W = Math.max(3, Math.round(win || 6)), tr = run(best.kk, best.sp, true); let k0 = K0, be = 1e9, wm = 0;
+  for (let k = K0; k + W <= N; k++) { let b = 0, b1 = 0; for (let j = k; j < k + W; j++) { b += tr.st[j].b; b1 += tr.st[j].b1; } const m = b ? b1 / b : 0, e = Math.abs(m - p1); if (e < be - 1e-9) { be = e; k0 = k; wm = m; } }
+  return {C: best.C, caps: [best.C], arr: best.arr, sp: best.sp, r: {m1: best.m1, m2: best.m2, w: wm}, k0, q0: tr.st[k0].q};
 }
 //   기록판: 운영 기록(승차)은 정원에서 멈추고, 남겨진 사람은 어느 시스템에도 0 — 교통카드로 이어야 처음 보인다.
 let sceneRow = null, sceneStart = null, scenePaused = false, nostopMode = false;
@@ -463,7 +470,7 @@ function playScene(x, startMin){
   // 기록판
   const led = el('g', {transform: 'translate(300,8)'}, s);
   el('rect', {x: 0, y: 0, width: 592, height: 84, rx: 10, fill: surf}, led);
-  const h1 = el('text', {x: 14, y: 22, 'font-size': 12, fill: mute}, led); h1.textContent = '승차 기록에 남는 것: 탄 사람';
+  const h1 = el('text', {x: 14, y: 22, 'font-size': 12, fill: mute}, led); h1.textContent = '승차 기록에 남는 것: 갈아타고 탄 사람';
   const v1 = el('text', {x: 14, y: 52, 'font-size': 24, fill: ink, 'font-weight': 800}, led);
   const n1 = el('text', {x: 150, y: 52, 'font-size': 11, fill: mute}, led);
   el('line', {x1: 292, x2: 292, y1: 10, y2: 60, stroke: css('--line')}, led);
@@ -499,17 +506,18 @@ function playScene(x, startMin){
   const peak = cells.length ? cells.reduce((a, c) => c.mn > a.mn ? c : a, cells[0]) : null;
   let mins = sceneStart != null ? sceneStart : (inBand.length ? inBand.reduce((a, c) => c.mn > a.mn ? c : a, inBand[0]).min : (x.b === '퇴근' ? 1080 : x.b === '출근' ? 420 : 720));
   const cellAt = m => cells.find(c => c.min <= m && m < c.min + 30);
-  const FQC = {}; const parAt = c => { if (!c) return null; if (!FQC[c.hh]) { const per_c = Math.max(3, Math.min(90, Math.round(c.t / c.bus))), p1c = Math.min(.95, c.mn / c.t); FQC[c.hh] = {hh: c.hh, c, per: per_c, hw: 30 / c.bus, p1: p1c, fq: fitQueue(p1c, null, per_c)}; } return FQC[c.hh]; };
-  let cur = parAt(cellAt(mins));
+  const FQC = {}; const parAt = c => { if (!c) return null; if (!FQC[c.hh]) { const per_c = Math.max(3, Math.min(90, Math.round(c.t / c.bus))), p1c = Math.min(.95, c.mn / c.t); FQC[c.hh] = {hh: c.hh, c, per: per_c, hw: 30 / c.bus, p1: p1c, fq: fitQueue(p1c, null, per_c, c.bus), j0: 0}; } return FQC[c.hh]; };
+  const cell0 = cellAt(mins); if (cell0) { mins = cell0.min; sceneStart = cell0.min; }
+  let cur = parAt(cell0); if (cur) cur.j0 = 0;
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const P = [];
   const mk = (miss) => { const g = el('g', {}, layer); el('circle', {cx: 0, cy: -13, r: 5}, g); el('rect', {x: -5, y: -7, width: 10, height: 16, rx: 4}, g);
     const b = el('text', {x: 0, y: -20, 'font-size': 11, 'text-anchor': 'middle', 'font-weight': 800}, g); return {miss, g, b, out: null}; };
-  const FQ = fitQueue(p1, p2, per), CAP = cur ? cur.fq.C : FQ.C;
+  const FQ = fitQueue(p1, p2, per, 6), CAP = cur ? cur.fq.C : FQ.C;
   const perNow = () => cur ? cur.per : per, hwNow = () => cur ? cur.hw : hw;
-  const arrOf = k => { const q = cur ? cur.fq : FQ; return q.arr ? q.arr[k % q.arr.length] : perNow(); };   // 배차마다 오는 사람 수(열차 몰림, 모의)
+  const arrOf = k => { const q = cur ? cur.fq : FQ; return q.arr ? q.arr[((q.k0 || 0) + k - (cur ? cur.j0 : 0)) % q.arr.length] : perNow(); };   // 버스 k 를 탈 사람 수(열차 몰림, 모의) — 고른 구간 k0 부터
   const capOf = k => nostopMode ? 0 : (cur ? cur.fq.caps : FQ.caps)[k % (cur ? cur.fq.caps : FQ.caps).length];   // 무정차 보기: 빈자리 0   // 이 차가 이 정류장에서 태울 수 있는 빈자리(차마다 다름)
-  for (let i = 0; i < Math.round(per * .5); i++) P.push(mk(0));
+  for (const [mi, cnt] of ((cur ? cur.fq : FQ).q0 || [])) for (let i = 0; i < cnt; i++) P.push(mk(mi));   // 시작 줄: 모의 줄에서 고른 시점에 이미 서 있던 사람(앞차를 보낸 대수 포함)
   let spawned = 0, boarded = 0, left1 = 0, left2 = 0, cyc = -1, lastLeft = 0, lastN = 0, lastCap = 0, decided = -1, departed = -1;
   let cols = 36;
   const spot = i => { const r = Math.floor(i / cols), c = i % cols, dx = 666 / cols; return [200 + c * dx + (r % 2) * dx / 2, 258 - r * 28]; };
@@ -525,23 +533,26 @@ function playScene(x, startMin){
       ${[6, 9, 12, 15, 18, 21].map(h => `<text x="${xo(h * 60)}" y="75" font-size="9" fill="${mute}">${h}:00</text>`).join('')}
       <text x="${Math.min(800, xo(peak.min) + bw + 4)}" y="${Math.max(10, 62 - (6 + 46) + 4)}" font-size="10" font-weight="800" fill="${c2}">최고 ${String(peak.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} · 앞차 보냄 ${fmt(peak.mn)}명</text>
       <line id="tlHead" x1="0" x2="0" y1="4" y2="64" stroke="${ink}" stroke-width="2"/></svg>
-      <div class="small mute">막대 = 30분마다 앞차를 보낸 사람(6/9·7/8·8/12 3일 평균) · 진한 색 = ${BL[x.b]} 시간대 · 가장 진한 막대 = 하루 최고 · 막대를 누르면 그 시각부터 재생</div>`;
+      <div class="small mute">막대 = 30분마다 앞차를 보낸 사람(6/9·7/8·8/12 3일 평균) · 진한 색 = ${BL[x.b]} 시간대 · 가장 진한 막대 = 하루 최고 · 막대를 누르면 그 30분 칸을 반복 재생</div>`;
     $('#tlSvg').addEventListener('click', e => { const r = e.target.closest('rect[data-min]'); let m; if (r) m = +r.dataset.min; else { const bb = e.currentTarget.getBoundingClientRect(); m = Math.floor((360 + (e.clientX - bb.left) / bb.width * 960) / 30) * 30; } playScene(null, m); });
     $('#tlPlay').onclick = () => { scenePaused = !scenePaused; $('#tlPlay').textContent = scenePaused ? '▶ 재생' : '⏸ 멈춤'; };
     $('#nsBtn').onclick = () => { nostopMode = !nostopMode; playScene(null, sceneStart); };
   } else TL.innerHTML = '<div class="small mute">이 칸은 30분 단위 집계(수도권 전역판)에 없어 시간대 평균으로만 재생한다.</div>';
-  $('#stageCap').innerHTML = `<b>모의 장면</b>: 실제 줄을 센 것이 아니라, 카드로 잰 비율(${pct(p1)})이 나오도록 사람이 몰려 오는 크기를 맞춰 그린 그림이다. 장면은 자리가 모자라 남는 경우만 그리지만, 실제 지수에는 일부러 다음 차를 기다린 사람·4분보다 늦게 도착한 사람도 섞일 수 있다.<span class="exp"> 줄 선 순서대로 타고, 버스마다 이 정류장에서 태울 수 있는 자리는 약 ${CAP}명으로 같다고 두었다(꽉 차서 도착하는 버스는 그리지 않음). 사람은 지하철 열차가 올 때 몰려 배차마다 오는 수가 다르고, 줄이 자리보다 길 때 뒤쪽이 남는다. 이 몰림 크기를 카드 실측 비율(${pct(p1)})에 맞춰 골랐고 장면의 비율은 ${pct(FQ.r.m1)}이다. 장면 속 사람은 분석 대상 환승객만이다.</span>`;
+  const P1S = cur ? cur.p1 : p1, CELLS = cur ? `${String(cur.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} 칸 ` : '';
+  $('#stageCap').innerHTML = `<b>모의 장면</b>: 실제 줄을 센 것이 아니라, ${CELLS}카드로 잰 비율(${pct(P1S)})이 나오도록 사람이 몰려 오는 크기를 맞춰 그린 그림이다. 장면은 자리가 모자라 남는 경우만 그리지만, 실제 지수에는 일부러 다음 차를 기다린 사람·4분보다 늦게 도착한 사람도 섞일 수 있다.<span class="exp"> 줄 선 순서대로 타고, 버스마다 이 정류장에서 태울 수 있는 자리는 약 ${CAP}명으로 같다고 두었다(꽉 차서 도착하는 버스는 그리지 않음). 사람은 지하철 열차가 올 때 몰려 배차마다 오는 수가 다르고, 줄이 자리보다 길 때 뒤쪽이 남는다. 이 몰림 크기를 카드 실측 비율(${pct(P1S)})에 맞춰 골랐고, 줄이 쌓인 뒤의 한 구간부터 재생한다(그 구간의 비율 ${pct(cur ? cur.fq.r.w : FQ.r.m1)}). 30분 칸마다 따로 맞췄기 때문에 고른 칸만 반복한다. 장면 속 사람은 분석 대상 환승객만이다.</span>`;
   function frame(now){
     anim = requestAnimationFrame(frame);
     if (!$('#p-scene').classList.contains('on') || document.hidden) { last = null; return; }
     if (scenePaused) { last = null; return; }
     if (reduce) T = CYC * 3 + ARR + DW * .9; else { if (last !== null) { const dt = Math.min(now - last, 100); T += dt; mins += dt / CYC * hwNow(); } last = now; }   // 한 프레임에 최대 0.1초 → 배차를 건너뛰지 않음
-    if (cells.length && mins >= 1320) { playScene(null, sceneStart != null ? sceneStart : cells[0].min); return; }   // 22시가 넘으면 처음 시각부터 다시
-    const cNow = cellAt(mins); if (cNow && (!cur || cNow.hh !== cur.hh)) cur = parAt(cNow);
+    if (cell0 && mins >= cell0.min + 30) { playScene(null, cell0.min); return; }   // 고른 30분 칸만 반복(칸마다 따로 맞춘 모의 줄이라 다음 칸으로 이어 붙이지 않는다)
+    if (!cell0 && cells.length && mins >= 1320) { playScene(null, sceneStart != null ? sceneStart : cells[0].min); return; }
+    const cNow = cellAt(mins); if (cNow && (!cur || cNow.hh !== cur.hh)) { cur = parAt(cNow); cur.j0 = Math.max(0, cyc); }
     const k = Math.floor(T / CYC), u = T - k * CYC;
-    if (k !== cyc) { cyc = k; P.__base = spawned; }
-    const ak = arrOf(k), burst = false;
-    const target = P.__base + Math.floor(ak * Math.min(1, u / CYC)); while (spawned < target) { P.push(mk(0)); spawned++; }
+    // 버스 j 를 탈 사람은 직전 버스 정차(ARR) 뒤부터 다음 정차 전까지 몰려 온다(버스 0 몫은 시작할 때 이미 와 있음)
+    const j = T < ARR ? 0 : Math.floor((T - ARR) / CYC) + 1, fr = T < ARR ? 1 : ((T - ARR) % CYC) / CYC;
+    if (j !== cyc) { if (cyc >= 0) while (spawned < P.__need) { P.push(mk(0)); spawned++; } cyc = j; P.__base = spawned; P.__aj = arrOf(j); P.__need = spawned + P.__aj; }
+    const target = P.__base + Math.floor(P.__aj * fr); while (spawned < target) { P.push(mk(0)); spawned++; }
     let bx;
     if (nostopMode) bx = 900 - 1350 * (u / (ARR + DW + DEP)); else if (u < ARR) bx = 900 - 830 * (u / ARR); else if (u < ARR + DW) bx = 70; else if (u < ARR + DW + DEP) bx = 70 - 520 * ((u - ARR - DW) / DEP); else bx = 1200;
     bus.setAttribute('transform', `translate(${bx},282) scale(.72)`);
@@ -580,8 +591,8 @@ function playScene(x, startMin){
     clkl.textContent = `${BL[x.b]} · 이 30분 칸 운행 간격 ${fmt(hwNow(), 1)}분을 5초로`;
     if (cells.length) { const hd = $('#tlHead'); if (hd) { const xx = (mins - 360) / 960 * 900; hd.setAttribute('x1', xx); hd.setAttribute('x2', xx); }
       const cc = cur ? cur.c : null; $('#tlCap').innerHTML = cc ? `지금 <b>${String(cc.hh).padStart(4, '0').replace(/(\d\d)(\d\d)/, '$1:$2')} 칸</b>: 갈아탄 ${fmt(cc.t)}명 · 앞차를 보낸 ${fmt(cc.mn)}명(${pct(cc.mn / cc.t)}) · 버스 ${fmt(cc.bus, 1)}회(간격 ${fmt(30 / cc.bus, 1)}분) — 30분 칸, 6/9·7/8·8/12 3일 평균` : '이 시각은 집계 칸이 없다(하루 10명 미만)'; }
-    v1.textContent = x.bd ? `하루 ${fmt(x.bd)}명` : '–'; n1.textContent = ''; n2.textContent = x.bd ? `이 정류장 ${rname(x.r)}번 ${x.b} 승차 · 4일 표본` : '';
-    v2.textContent = `하루 ${fmt(x.mn)}명`; v3.textContent = x.mn >= 1 ? `38일 평균 · 교통카드 하차·승차 연결로 추정` : '교통카드 하차·승차 연결로 추정';
+    v1.textContent = `하루 ${fmt(x.t)}명`; n1.textContent = ''; n2.textContent = `${rname(x.r)}번으로 갈아탄 사람 · 38일 평균`;   // 오른쪽(보낸 사람)과 같은 38일 환승 기준. 4일 표본 승차 합계(x.bd)는 환승 아닌 승객까지 들어 있어 나란히 두지 않는다
+    v2.textContent = `하루 ${fmt(x.mn)}명`; v3.textContent = x.mn >= 1 ? `갈아탄 사람의 ${pct(x.m1)} · 38일 평균` : '교통카드 하차·승차 연결로 추정';
     msg.textContent = nostopMode ? '만차 무정차: 버스가 서지 않고 지나간다. 승차 태그가 없어 잔류승객지수에는 잡히지 않는다(별도 추정: 출근 광역 48노선 하루 196회·716명, 6/9)' : u < ARR ? '버스가 들어온다(앱 안내대로 도착).'
       : boarding ? (lastLeft ? `앞에서부터 ${lastN}명이 타고 꽉 찼다. 뒤쪽 ${lastLeft}명은 남고, 승차 기록에는 ${lastN}명만 남는다.` : `밀린 줄까지 ${lastN}명이 다 탔다.`)
       : u < ARR + DW + DEP ? '버스가 떠나고, 남은 사람은 승차 기록에 없다.'
